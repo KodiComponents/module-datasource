@@ -3,12 +3,15 @@
 namespace KodiCMS\Datasource\Sections;
 
 use Meta;
+use Datatables;
 use Illuminate\Http\JsonResponse;
+use KodiCMS\Datasource\DatatablesTable;
 use KodiCMS\Datasource\Contracts\SectionInterface;
 use KodiCMS\Datasource\Contracts\SectionHeadlineInterface;
 
-class SectionHeadlineDatatables implements SectionHeadlineInterface
+class SectionHeadlineDatatables extends DatatablesTable implements SectionHeadlineInterface
 {
+
     /**
      * @var SectionInterface
      */
@@ -30,7 +33,10 @@ class SectionHeadlineDatatables implements SectionHeadlineInterface
     public function __construct(SectionInterface $section)
     {
         $this->section = $section;
+
         Meta::loadPackage('datatables');
+
+        parent::__construct();
     }
 
     /**
@@ -81,13 +87,29 @@ class SectionHeadlineDatatables implements SectionHeadlineInterface
     }
 
     /**
+     * @return \Illuminate\Database\Query\Builder
+     */
+    protected function prepareQuery()
+    {
+        $query = $this->section->getEmptyDocument();
+
+        foreach ($this->getJoins() as $join) {
+            call_user_func_array([$query, array_shift($join)], $join);
+        }
+
+        return $query->getQuery();
+    }
+
+    /**
      * @return array
      */
     public function getDocuments()
     {
-        $document = $this->section->getEmptyDocument();
-
-        return app('datatables')->usingDatasourceEngine($document, $this)->make();
+        return $this->addColumns(
+            $this->morphColumns(
+                Datatables::of($this->prepareQuery())
+            )
+        )->make(true);
     }
 
     /**
@@ -115,7 +137,7 @@ class SectionHeadlineDatatables implements SectionHeadlineInterface
 
         return view($template, [
             'fieldParams' => $this->getHeadlineFields(),
-            'section'     => $this->section,
+            'section'     => $this->section
         ]);
     }
 
@@ -125,5 +147,33 @@ class SectionHeadlineDatatables implements SectionHeadlineInterface
     public function renderOrderSettings()
     {
         return;
+    }
+
+    /**
+     * @return array
+     */
+    protected function getTableColumns()
+    {
+        $columns = [
+            [
+                'data'           => null,
+                'orderable'      => false,
+                'defaultContent' => \Form::checkbox('document[]', null, null, ['class' => 'doc-checkbox'])
+            ]
+        ];
+
+        foreach ($this->getHeadlineFields() as $key => $params) {
+            $columns[] = [
+                'data'       => $key,
+                'name'       => $key,
+                'title'      => $params['name'],
+                'className'  => array_get($params, 'class'),
+                'type'       => array_get($params, 'type', 'string'),
+                'orderable'  => array_get($params, 'orderable', 'true'),
+                'searchable' => array_get($params, 'searchable', 'true')
+            ];
+        }
+
+        return $columns;
     }
 }

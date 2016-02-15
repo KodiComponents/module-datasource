@@ -10,7 +10,6 @@ use KodiCMS\Support\ServiceProvider;
 use KodiCMS\Datasource\FieldManager;
 use KodiCMS\Datasource\FieldGroupManager;
 use KodiCMS\Datasource\DatasourceManager;
-use KodiCMS\Datasource\Datatables\SectionDatatables;
 
 class ModuleServiceProvider extends ServiceProvider
 {
@@ -19,8 +18,8 @@ class ModuleServiceProvider extends ServiceProvider
         $this->registerAliases([
             'DatasourceManager' => \KodiCMS\Support\Facades\DatasourceManager::class,
             'FieldManager'      => \KodiCMS\Support\Facades\FieldManager::class,
-            'FieldGroupManager' => \KodiCMS\Support\Facades\FieldGroupManager::class,
-            'SectionDatatables' => \KodiCMS\Datasource\Datatables\SectionDatatables::class,
+            'Datatables'        => \Yajra\Datatables\Datatables::class,
+            'FieldGroupManager' => \KodiCMS\Support\Facades\FieldGroupManager::class
         ]);
 
         $this->app->singleton('datasource.manager', function () {
@@ -33,12 +32,6 @@ class ModuleServiceProvider extends ServiceProvider
 
         $this->app->singleton('datasource.group.manager', function () {
             return new FieldGroupManager(config('field_groups', []));
-        });
-
-        $this->app->bind('datatables', function ($app) {
-            $request = $app->make('\yajra\Datatables\Request');
-
-            return new SectionDatatables($request);
         });
 
         $this->registerConsoleCommand(\KodiCMS\Datasource\Console\Commands\DatasourceMigrate::class);

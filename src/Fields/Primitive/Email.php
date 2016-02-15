@@ -2,7 +2,7 @@
 
 namespace KodiCMS\Datasource\Fields\Primitive;
 
-use Illuminate\Html\HtmlFacade;
+use Collective\Html\HtmlFacade;
 use Illuminate\Validation\Validator;
 use KodiCMS\Datasource\Fields\Primitive;
 use Illuminate\Database\Schema\Blueprint;

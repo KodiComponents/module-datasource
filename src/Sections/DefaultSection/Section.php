@@ -7,9 +7,9 @@ use KodiCMS\Datasource\Fields\Primitive\HTML;
 use KodiCMS\Datasource\FieldGroups\TitleGroup;
 use KodiCMS\Datasource\Fields\Primitive\String;
 use KodiCMS\Datasource\Sections\SectionToolbar;
+use KodiCMS\Datasource\Sections\SectionHeadline;
 use KodiCMS\Datasource\Fields\Primitive\Primary;
 use KodiCMS\Datasource\Fields\Primitive\Timestamp;
-use KodiCMS\Datasource\Sections\SectionHeadlineDatatables;
 
 class Section extends \KodiCMS\Datasource\Model\Section
 {
@@ -31,7 +31,7 @@ class Section extends \KodiCMS\Datasource\Model\Section
      */
     public function getHeadlineClass()
     {
-        return SectionHeadlineDatatables::class;
+        return SectionHeadline::class;
     }
 
     /**

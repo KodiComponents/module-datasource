@@ -235,6 +235,11 @@ class Section extends DatasourceModel implements SectionInterface
      */
     public function getHeadline()
     {
+        if (is_null($this->headline)) {
+            $headlineClass  = $this->getHeadlineClass();
+            $this->headline = new $headlineClass($this);
+        }
+
         return $this->headline;
     }
 
@@ -260,6 +265,11 @@ class Section extends DatasourceModel implements SectionInterface
 
     public function getToolbar()
     {
+        if (is_null($this->toolbar)) {
+            $toolbarClass = $this->getToolbarClass();
+            $this->toolbar = new $toolbarClass($this);
+        }
+
         return $this->toolbar;
     }
 
@@ -523,12 +533,6 @@ class Section extends DatasourceModel implements SectionInterface
         if ($this->initialized) {
             return;
         }
-
-        $headlineClass = $this->getHeadlineClass();
-        $this->headline = new $headlineClass($this);
-
-        $toolbarClass = $this->getToolbarClass();
-        $this->toolbar = new $toolbarClass($this);
 
         parent::initialize();
     }
