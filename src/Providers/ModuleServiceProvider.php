@@ -53,7 +53,7 @@ class ModuleServiceProvider extends ServiceProvider
                     ]);
 
                     if ($dsSection->getSetting('show_in_root_menu')) {
-                        $navigation->addPage($page);
+                        $navigation->getRootSection()->addPage($page);
                     } else {
                         $section->addPage($page);
                     }
