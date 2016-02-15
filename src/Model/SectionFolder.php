@@ -3,11 +3,31 @@
 namespace KodiCMS\Datasource\Model;
 
 use Illuminate\Database\Eloquent\Model;
-use KodiCMS\Datasource\Contracts\FolderInterface;
 
-class SectionFolder extends Model implements FolderInterface
+class SectionFolder extends Model
 {
+    protected static function boot()
+    {
+        parent::boot();
+
+        static::deleting(function (SectionFolder $folder) {
+            $folder->sections()->update([
+                'folder_id' => 0
+            ]);
+        });
+    }
+
+    /**
+     * @var string
+     */
     protected $table = 'datasource_folders';
+
+    /**
+     * Indicates if the model should be timestamped.
+     *
+     * @var bool
+     */
+    public $timestamps = false;
 
     /**
      * The attributes that are mass assignable.
@@ -28,4 +48,12 @@ class SectionFolder extends Model implements FolderInterface
         'name'     => 'string',
         'position' => 'integer',
     ];
+
+    /**
+     * @return mixed
+     */
+    public function sections()
+    {
+        return $this->hasMany(Section::class, 'folder_id', 'id');
+    }
 }

@@ -46,5 +46,12 @@ Route::group(['as' => 'api.datasource.', 'middleware' => ['web', 'api']], functi
         'as'   => 'document.remove',
         'uses' => 'API\DocumentController@deleteDelete',
     ]);
+
     RouteAPI::get('datasource.document.find', ['as' => 'document.find', 'uses' => 'API\DocumentController@getFind']);
+
+    RouteAPI::get('datasource.menu.get', ['as' => 'menu.get', 'uses' => 'API\MenuController@getMenu']);
+    RouteAPI::get('datasource.folder.get', ['as' => 'folder.get', 'uses' => 'API\MenuController@getFolderById']);
+    RouteAPI::put('datasource.folder.create', ['as' => 'folder.create', 'uses' => 'API\MenuController@createFolder']);
+    RouteAPI::post('datasource.folder.section', ['as' => 'folder.create', 'uses' => 'API\MenuController@addSectionToFolder']);
+    RouteAPI::delete('datasource.folder.delete', ['as' => 'folder.delete', 'uses' => 'API\MenuController@deleteFolder']);
 });

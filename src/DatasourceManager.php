@@ -53,6 +53,32 @@ class DatasourceManager extends AbstractManager
      *
      * @return array
      */
+    public function getRootSections(array $types = null)
+    {
+        $query = Section::where('folder_id', 0);
+
+        if (! empty($types)) {
+            $query->whereIn('type', $types);
+        }
+
+        $sections = [];
+
+        foreach ($query->get() as $section) {
+            if (! $this->typeExists($section->type)) {
+                continue;
+            }
+
+            $sections[$section->id] = $section;
+        }
+
+        return $sections;
+    }
+
+    /**
+     * @param array|null $types
+     *
+     * @return array
+     */
     public function getSections(array $types = null)
     {
         $query = Section::query();

@@ -2,9 +2,11 @@
 
 namespace KodiCMS\Datasource\Http\Controllers;
 
+use Assets;
 use DatasourceManager;
-use KodiCMS\CMS\Http\Controllers\System\BackendController;
+use KodiCMS\Datasource\Model\SectionFolder;
 use KodiCMS\Datasource\Repository\SectionRepository;
+use KodiCMS\CMS\Http\Controllers\System\BackendController;
 
 class DatasourceController extends BackendController
 {
@@ -41,10 +43,13 @@ class DatasourceController extends BackendController
             $section = $headline = $toolbar = null;
         }
 
+        Assets::loadPackage('jquery-ui');
+
         $this->setContent('content', [
             'navigation' => view('datasource::navigation', [
                 'types'    => DatasourceManager::getAvailableTypes(),
-                'sections' => DatasourceManager::getSections(),
+                'folders'  => SectionFolder::with('sections')->get(),
+                'sections' => DatasourceManager::getRootSections(),
             ]),
             'section'    => view('datasource::section', [
                 'headline' => $headline,

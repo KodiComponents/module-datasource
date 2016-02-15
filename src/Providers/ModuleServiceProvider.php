@@ -10,6 +10,7 @@ use KodiCMS\Support\ServiceProvider;
 use KodiCMS\Datasource\FieldManager;
 use KodiCMS\Datasource\FieldGroupManager;
 use KodiCMS\Datasource\DatasourceManager;
+use KodiCMS\Datasource\Model\SectionFolder;
 
 class ModuleServiceProvider extends ServiceProvider
 {
@@ -41,7 +42,7 @@ class ModuleServiceProvider extends ServiceProvider
     {
         Event::listen('navigation.inited', function (Navigation $navigation) {
             if (! is_null($section = $navigation->findSectionOrCreate('Datasources'))) {
-                $sections = app('datasource.manager')->getSections();
+                $sections = app('datasource.manager')->getRootSections();
 
                 foreach ($sections as $dsSection) {
                     $page = new Page([
@@ -56,6 +57,29 @@ class ModuleServiceProvider extends ServiceProvider
                         $navigation->getRootSection()->addPage($page);
                     } else {
                         $section->addPage($page);
+                    }
+                }
+
+                $folders = SectionFolder::with('sections')->get();
+
+                foreach ($folders as $folder) {
+                    if (count($folder->sections) > 0) {
+                        $subSection = new Section($navigation, [
+                            'name'  => 'Datasource',
+                            'label' => $folder->name,
+                            'icon'  => 'folder-open-o',
+                        ]);
+
+                        foreach ($folder->sections as $dsSection) {
+                            $subSection->addPage(new Page([
+                                'name'  => $dsSection->getName(),
+                                'label' => $dsSection->getName(),
+                                'icon'  => $dsSection->getIcon(),
+                                'url'   => $dsSection->getLink(),
+                            ]));
+                        }
+
+                        $section->addPage($subSection);
                     }
                 }
 
