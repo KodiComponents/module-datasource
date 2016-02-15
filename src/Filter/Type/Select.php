@@ -2,7 +2,7 @@
 
 namespace KodiCMS\Datasource\Filter\Type;
 
-use Closure;
+use KodiCMS\Datasource\Model\Field;
 use KodiCMS\Datasource\Filter\Type;
 
 class Select extends Type
@@ -25,7 +25,7 @@ class Select extends Type
     /**
      * @var bool
      */
-    protected $isMultiple = false;
+    protected $isMultiple = true;
 
     /**
      * @var array
@@ -33,19 +33,17 @@ class Select extends Type
     protected $values = [];
 
     /**
-     * @param string     $id
-     * @param string     $label
-     * @param string     $tableField
-     * @param Closure    $values
-     * @param bool|false $isMultiple
-     * @param array|null $operators
+     * Select constructor.
+     *
+     * @param Field $field
      */
-    public function __construct($id, $label, $tableField, Closure $values, $isMultiple = false, array $operators = null)
+    public function __construct(Field $field)
     {
-        parent::__construct($id, $label, $tableField, $operators);
+        parent::__construct($field);
 
-        $this->values = $values;
-        $this->isMultiple = $isMultiple;
+        $this->values = function() use($field) {
+            return $field->getOptionsList();
+        };
     }
 
     /**
