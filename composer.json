@@ -9,8 +9,7 @@
         {
             "name":     "Pavel Buchnev",
             "email":    "butschster@gmail.com",
-            "homepage": "http://www.kodicms.ru/",
-            "role":     "developer"
+            "homepage": "http://www.kodicms.ru/"
         }
     ],
     "support": {
@@ -18,8 +17,14 @@
         "forum":    "http://www.kodicms.ru/forum",
         "source":   "https://github.com/KodiComponents/module-datasource"
     },
+    "autoload": {
+        "psr-4": {
+            "KodiCMS\\Datasource\\": "src/"
+        }
+    },
     "require": {
-        "kodicms/core": "dev-master",
-        "kodicms/widgets": "*"
+        "kodicms/module-loader": "3.*",
+        "kodicms/widgets": "*",
+		"yajra/laravel-datatables-oracle": "~5.0"
     }
 }
