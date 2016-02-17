@@ -5,22 +5,27 @@ namespace KodiCMS\Datasource\Providers;
 use Event;
 use KodiCMS\Navigation\Page;
 use KodiCMS\Navigation\Section;
+use Yajra\Datatables\Datatables;
 use KodiCMS\Navigation\Navigation;
 use KodiCMS\Support\ServiceProvider;
 use KodiCMS\Datasource\FieldManager;
 use KodiCMS\Datasource\FieldGroupManager;
 use KodiCMS\Datasource\DatasourceManager;
 use KodiCMS\Datasource\Model\SectionFolder;
+use KodiCMS\Datasource\Console\Commands\DatasourceMigrate;
+use KodiCMS\Datasource\Facades\FieldManager as FieldManagerFacade;
+use KodiCMS\Datasource\Facades\FieldGroupManager as FieldGroupManagerFacade;
+use KodiCMS\Datasource\Facades\DatasourceManager as DatasourceManagerFacade;
 
 class ModuleServiceProvider extends ServiceProvider
 {
     public function register()
     {
         $this->registerAliases([
-            'DatasourceManager' => \KodiCMS\Support\Facades\DatasourceManager::class,
-            'FieldManager'      => \KodiCMS\Support\Facades\FieldManager::class,
-            'Datatables'        => \Yajra\Datatables\Datatables::class,
-            'FieldGroupManager' => \KodiCMS\Support\Facades\FieldGroupManager::class
+            'DatasourceManager' => DatasourceManagerFacade::class,
+            'FieldManager'      => FieldManagerFacade::class,
+            'Datatables'        => Datatables::class,
+            'FieldGroupManager' => FieldGroupManagerFacade::class
         ]);
 
         $this->app->singleton('datasource.manager', function () {
@@ -35,10 +40,15 @@ class ModuleServiceProvider extends ServiceProvider
             return new FieldGroupManager(config('field_groups', []));
         });
 
-        $this->registerConsoleCommand(\KodiCMS\Datasource\Console\Commands\DatasourceMigrate::class);
+        $this->registerConsoleCommand(DatasourceMigrate::class);
     }
 
     public function boot()
+    {
+        $this->initNavigation();
+    }
+
+    protected function initNavigation()
     {
         Event::listen('navigation.inited', function (Navigation $navigation) {
             if (! is_null($section = $navigation->findSectionOrCreate('Datasources'))) {
