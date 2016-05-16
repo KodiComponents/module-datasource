@@ -12,7 +12,7 @@ return [
         'edit_template' => 'datasource::field.types.integer',
     ],
     'string'       => [
-        'class'         => KodiCMS\Datasource\Fields\Primitive\String::class,
+        'class'         => KodiCMS\Datasource\Fields\Primitive\Text::class,
         'title'         => trans('datasource::fields.string.title'),
         'edit_template' => 'datasource::field.types.string',
     ],

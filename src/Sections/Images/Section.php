@@ -5,7 +5,7 @@ namespace KodiCMS\Datasource\Sections\Images;
 use KodiCMS\Datasource\Fields\File\Image;
 use KodiCMS\Datasource\Sections\Document;
 use KodiCMS\Datasource\FieldGroups\TitleGroup;
-use KodiCMS\Datasource\Fields\Primitive\String;
+use KodiCMS\Datasource\Fields\Primitive\Text;
 use KodiCMS\Datasource\Fields\Primitive\Primary;
 use KodiCMS\Datasource\Fields\Primitive\Timestamp;
 
@@ -41,7 +41,7 @@ class Section extends \KodiCMS\Datasource\Model\Section
                 ],
             ]),
             (new TitleGroup)->setFields([
-                new String([
+                new Text([
                     'key'      => 'header',
                     'name'     => 'Header',
                     'settings' => [

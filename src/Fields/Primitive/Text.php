@@ -5,7 +5,7 @@ namespace KodiCMS\Datasource\Fields\Primitive;
 use KodiCMS\Datasource\Fields\Primitive;
 use Illuminate\Database\Schema\Blueprint;
 
-class String extends Primitive
+class Text extends Primitive
 {
     /**
      * @return array

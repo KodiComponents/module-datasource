@@ -8,7 +8,7 @@ use KodiCMS\Widgets\Widget\Decorator;
 use KodiCMS\Widgets\Traits\WidgetCache;
 use KodiCMS\Widgets\Contracts\WidgetCacheable;
 use KodiCMS\Datasource\Traits\WidgetDatasource;
-use KodiCMS\Datasource\Fields\Primitive\String;
+use KodiCMS\Datasource\Fields\Primitive\Text;
 use KodiCMS\Datasource\Fields\Primitive\Textarea;
 use KodiCMS\Datasource\Traits\WidgetDatasourceFields;
 
@@ -116,7 +116,7 @@ class DatasourceDocument extends Decorator implements WidgetCacheable
         $fieldObjects = ! $this->getSection() ? [] : $this->section->getFields();
         $fields = [];
         foreach ($fieldObjects as $field) {
-            if (($field instanceof String) or ($field instanceof Textarea)) {
+            if (($field instanceof Text) or ($field instanceof Textarea)) {
                 $fields[$field->getDBKey()] = $field->getName();
             }
         }

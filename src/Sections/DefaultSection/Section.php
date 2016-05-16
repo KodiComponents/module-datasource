@@ -5,7 +5,7 @@ namespace KodiCMS\Datasource\Sections\DefaultSection;
 use KodiCMS\Datasource\Sections\Document;
 use KodiCMS\Datasource\Fields\Primitive\HTML;
 use KodiCMS\Datasource\FieldGroups\TitleGroup;
-use KodiCMS\Datasource\Fields\Primitive\String;
+use KodiCMS\Datasource\Fields\Primitive\Text;
 use KodiCMS\Datasource\Sections\SectionToolbar;
 use KodiCMS\Datasource\Sections\SectionHeadline;
 use KodiCMS\Datasource\Fields\Primitive\Primary;
@@ -59,7 +59,7 @@ class Section extends \KodiCMS\Datasource\Model\Section
                 ],
             ]),
             (new TitleGroup)->setFields([
-                new String([
+                new Text([
                     'key'      => 'header',
                     'name'     => 'Header',
                     'settings' => [
