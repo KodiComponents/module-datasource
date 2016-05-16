@@ -150,7 +150,7 @@ class Field extends DatasourceModel implements FieldInterface, Arrayable
      */
     public function getFilterTypeClass()
     {
-        return Type\String::class;
+        return Type\Text::class;
     }
 
     /**

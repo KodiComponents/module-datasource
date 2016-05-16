@@ -4,7 +4,7 @@ namespace KodiCMS\Datasource\Filter\Type;
 
 use KodiCMS\Datasource\Filter\Type;
 
-class String extends Type
+class Text extends Type
 {
     /**
      * @var string
