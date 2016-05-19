@@ -6,13 +6,13 @@ use Assets;
 use Illuminate\Database\Query\Builder;
 use Illuminate\Support\Collection;
 use KodiCMS\Datasource\Filter\Parser;
-use KodiCMS\Widgets\Widget\Decorator;
+use KodiCMS\Widgets\Widget\WidgetAbstract;
 use KodiCMS\Widgets\Traits\WidgetCache;
 use KodiCMS\Widgets\Contracts\WidgetCacheable;
 use KodiCMS\Datasource\Traits\WidgetDatasource;
 use KodiCMS\Datasource\Traits\WidgetDatasourceFields;
 
-class DatasourceList extends Decorator implements WidgetCacheable
+class DatasourceList extends WidgetAbstract implements WidgetCacheable
 {
     use WidgetCache, WidgetDatasource, WidgetDatasourceFields;
 

@@ -4,7 +4,7 @@ namespace KodiCMS\Datasource\Widget;
 
 use Request;
 use Frontpage;
-use KodiCMS\Widgets\Widget\Decorator;
+use KodiCMS\Widgets\Widget\WidgetAbstract;
 use KodiCMS\Widgets\Traits\WidgetCache;
 use KodiCMS\Widgets\Contracts\WidgetCacheable;
 use KodiCMS\Datasource\Traits\WidgetDatasource;
@@ -12,7 +12,7 @@ use KodiCMS\Datasource\Fields\Primitive\Text;
 use KodiCMS\Datasource\Fields\Primitive\Textarea;
 use KodiCMS\Datasource\Traits\WidgetDatasourceFields;
 
-class DatasourceDocument extends Decorator implements WidgetCacheable
+class DatasourceDocument extends WidgetAbstract implements WidgetCacheable
 {
     use WidgetCache, WidgetDatasource, WidgetDatasourceFields;
 
