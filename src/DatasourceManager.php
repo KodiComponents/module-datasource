@@ -13,20 +13,23 @@ use KodiCMS\Datasource\Contracts\FieldGroupInterface;
 
 class DatasourceManager extends AbstractManager
 {
+
     /**
-     * @param array $config
+     * @param string $type
+     * @param array  $settings
+     *
+     * @return $this
+     * @throws \Exception
      */
-    public function __construct(array $config)
+    public function registerSectionType($type, array $settings)
     {
-        $this->config = $config;
-
-        foreach ($this->config as $type => $data) {
-            if (! SectionType::isValid($data)) {
-                continue;
-            }
-
-            $this->types[$type] = new SectionType($type, $data);
+        if (! SectionType::isValid($settings)) {
+            throw new \Exception('Section type is invalid');
         }
+
+        $this->types[$type] = new SectionType($type, $settings);
+
+        return $this;
     }
 
     /**

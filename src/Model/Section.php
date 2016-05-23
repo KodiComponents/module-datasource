@@ -407,7 +407,7 @@ class Section extends DatasourceModel implements SectionInterface
      */
     public function userHasAccess($acl = 'section.edit')
     {
-        return Gate::allows($acl, $this);
+        return Gate::allows('datasource.'.$acl, $this);
     }
 
     /**

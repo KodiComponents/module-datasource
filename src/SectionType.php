@@ -128,7 +128,7 @@ class SectionType implements SectionTypeInterface
      */
     public function getTitle()
     {
-        return $this->title;
+        return trans($this->title);
     }
 
     /**

@@ -2,16 +2,15 @@
 
 namespace KodiCMS\Datasource\Providers;
 
-use Event;
-use KodiCMS\Navigation\Page;
-use KodiCMS\Navigation\Section;
+use KodiCMS\Datasource\Model\SectionFolder;
+use KodiCMS\Datasource\Navigation\Folder;
+use KodiCMS\Datasource\Navigation\Section;
+use KodiCMS\Datasource\Navigation\SectionType;
 use Yajra\Datatables\Datatables;
-use KodiCMS\Navigation\Navigation;
 use KodiCMS\Support\ServiceProvider;
 use KodiCMS\Datasource\FieldManager;
 use KodiCMS\Datasource\FieldGroupManager;
 use KodiCMS\Datasource\DatasourceManager;
-use KodiCMS\Datasource\Model\SectionFolder;
 use KodiCMS\Datasource\Console\Commands\DatasourceMigrate;
 use KodiCMS\Datasource\Facades\FieldManager as FieldManagerFacade;
 use KodiCMS\Datasource\Facades\FieldGroupManager as FieldGroupManagerFacade;
@@ -29,7 +28,25 @@ class ModuleServiceProvider extends ServiceProvider
         ]);
 
         $this->app->singleton('datasource.manager', function () {
-            return new DatasourceManager(config('datasources', []));
+            $manager = new DatasourceManager();
+
+            $types = [
+                'default'    => [
+                    'class' => \KodiCMS\Datasource\Sections\DefaultSection\Section::class,
+                    'title' => 'datasource::sections.default.title',
+                ],
+                'images'     => [
+                    'class' => \KodiCMS\Datasource\Sections\Images\Section::class,
+                    'title' => 'datasource::sections.images.title',
+                    'icon'  => 'image',
+                ]
+            ];
+
+            foreach ($types as $type => $settings) {
+                $manager->registerSectionType($type, $settings);
+            }
+
+            return $manager;
         });
 
         $this->app->singleton('datasource.field.manager', function () {
@@ -45,73 +62,53 @@ class ModuleServiceProvider extends ServiceProvider
 
     public function boot()
     {
-        $this->initNavigation();
+        \Event::listen('config.loaded', function () {
+            $this->initNavigation();
+        }, 999);
     }
 
     protected function initNavigation()
     {
-        Event::listen('navigation.inited', function (Navigation $navigation) {
-            if (! is_null($section = $navigation->findSectionOrCreate('Datasources'))) {
-                $sections = app('datasource.manager')->getRootSections();
+        $datasourcePage = \Navigation::addPage([
+            'id' => 'datasource',
+            'title' => 'datasource::core.title.section',
+            'priority' => 500,
+            'icon' => 'tasks',
+        ]);
 
-                foreach ($sections as $dsSection) {
-                    $page = new Page([
-                        'name'     => $dsSection->getName(),
-                        'label'    => $dsSection->getName(),
-                        'icon'     => $dsSection->getIcon(),
-                        'url'      => $dsSection->getLink(),
-                        'priority' => $dsSection->getMenuPosition(),
-                    ]);
+        $sections = app('datasource.manager')->getRootSections();
 
-                    if ($dsSection->getSetting('show_in_root_menu')) {
-                        $navigation->getRootSection()->addPage($page);
-                    } else {
-                        $section->addPage($page);
-                    }
-                }
+        foreach ($sections as $dsSection) {
+            $page = new Section($dsSection);
 
-                $folders = SectionFolder::with('sections')->get();
-
-                foreach ($folders as $folder) {
-                    if (count($folder->sections) > 0) {
-                        $subSection = new Section($navigation, [
-                            'name'  => 'Datasource',
-                            'label' => $folder->name,
-                            'icon'  => 'folder-open-o',
-                        ]);
-
-                        foreach ($folder->sections as $dsSection) {
-                            $subSection->addPage(new Page([
-                                'name'  => $dsSection->getName(),
-                                'label' => $dsSection->getName(),
-                                'icon'  => $dsSection->getIcon(),
-                                'url'   => $dsSection->getLink(),
-                            ]));
-                        }
-
-                        $section->addPage($subSection);
-                    }
-                }
-
-                $types = app('datasource.manager')->getAvailableTypes();
-
-                $subSection = new Section($navigation, [
-                    'name'  => 'Datasource',
-                    'label' => trans('datasource::core.button.create'),
-                    'icon'  => 'plus',
-                ]);
-
-                foreach ($types as $type => $object) {
-                    $subSection->addPage(new Page([
-                        'name'  => $object->getTitle(),
-                        'label' => $object->getTitle(),
-                        'icon'  => $object->getIcon(),
-                        'url'   => $object->getLink(),
-                    ]));
-                }
-
-                $section->addPage($subSection);
+            if ($dsSection->getSetting('show_in_root_menu')) {
+                \Navigation::addPage($page);
+            } else {
+                $datasourcePage->addPage($page);
             }
-        });
+        }
+
+        $folders = SectionFolder::with('sections')->get();
+
+        foreach ($folders as $folder) {
+            if (count($folder->sections) > 0) {
+                $folderPage = $datasourcePage->addPage(new Folder($folder));
+                foreach ($folder->sections as $dsSection) {
+                    $folderPage->addPage(new Section($dsSection));
+                }
+            }
+        }
+
+        if (count($types = app('datasource.manager')->getAvailableTypes()) > 0) {
+            $create = $datasourcePage->addPage([
+                'title' => 'datasource::core.button.create',
+                'icon' => 'plus',
+                'id' => 'datasource-create',
+            ]);
+
+            foreach ($types as $type => $object) {
+                $create->addPage(new SectionType($object));
+            }
+        }
     }
 }
