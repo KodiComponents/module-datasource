@@ -6,6 +6,7 @@ use Assets;
 use Illuminate\Database\Query\Builder;
 use Illuminate\Support\Collection;
 use KodiCMS\Datasource\Filter\Parser;
+use KodiCMS\Widgets\Contracts\WidgetManager;
 use KodiCMS\Widgets\Widget\WidgetAbstract;
 use KodiCMS\Widgets\Traits\WidgetCache;
 use KodiCMS\Widgets\Contracts\WidgetCacheable;
@@ -31,14 +32,14 @@ class DatasourceList extends WidgetAbstract implements WidgetCacheable
      */
     protected $settingsTemplate = 'datasource::widgets.list.settings';
 
-
     /**
-     * @param string $name
-     * @param string $description
+     * @param WidgetManager $widgetManager
+     * @param string        $name
+     * @param string        $description
      */
-    public function __construct($name, $description = '')
+    public function __construct(WidgetManager $widgetManager, $name, $description = '')
     {
-        parent::__construct($name, $description);
+        parent::__construct($widgetManager, $name, $description);
         Assets::loadPackage('query-builder');
     }
 
