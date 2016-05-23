@@ -2,6 +2,7 @@
 
 namespace KodiCMS\Datasource\Filter;
 
+use KodiCMS\Pages\Contracts\BehaviorPageInterface;
 use stdClass;
 use KodiCMS\Datasource\Filter\Operators\InOperator;
 use KodiCMS\Datasource\Contracts\FilterRuleInterface;
@@ -166,14 +167,21 @@ class Rule implements FilterRuleInterface
 	{
 		$value = $this->value;
 
-		if (is_array($value) and count($value) === 1) {
-			$value = $value[0];
+		if (is_array($value)) {
+			foreach ($value as $i => $v) {
+				$value[$i] = $this->parseValue($v);
+			}
+
+			if (count($value) === 1) {
+				$value = $value[0];
+			}
 		}
 
 		if (method_exists($this->getField(), 'prepareValue')) {
 			$value = $this->getField()->prepareValue($value);
 		}
 
+		dd($value);
 		return $value;
 	}
 
@@ -193,5 +201,37 @@ class Rule implements FilterRuleInterface
 	protected function parseCondition($condition)
 	{
 		return strtolower($condition) == 'or' ? 'or' : 'and';
+	}
+
+	/**
+	 * @param string $param
+	 *
+	 * @return mixed
+	 */
+	private function parseValue($param)
+	{
+        if (strpos($param, '$route.') !== false) {
+            list($type, $path) = explode('.', $param, 2);
+
+            return \Route::getCurrentRoute()->getParameter($path);
+        } else if (strpos($param, '$get.') !== false) {
+            list($type, $path) = explode('.', $param, 2);
+
+            return \Request::get($path);
+        } else if (strpos($param, '$page.') !== false) {
+            list($type, $path) = explode('.', $param, 2);
+            $page = \Frontpage::getFacadeRoot();
+
+            if (method_exists($page, $method = 'get'.ucfirst($path))) {
+                return $page->$method();
+            }
+        } else if (strpos($param, '$behavior.') !== false) {
+            list($type, $path) = explode('.', $param, 2);
+
+            /** @var BehaviorPageInterface $behavior */
+            if (! is_null($behavior = \Frontpage::getBehaviorObject())) {
+                return $behavior->getRouter()->getParameter($path);
+            }
+        }
 	}
 }
