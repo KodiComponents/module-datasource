@@ -3,6 +3,7 @@
 namespace KodiCMS\Datasource\Model;
 
 use DatasourceManager;
+use Gate;
 use KodiCMS\Datasource\Document;
 use KodiCMS\Datasource\Fields\FieldsCollection;
 use KodiCMS\Datasource\Sections\SectionToolbar;
@@ -391,79 +392,62 @@ class Section extends DatasourceModel implements SectionInterface
     /**
      * Пользователь - создатель раздела.
      *
-     * @param int|null $userId
-     *
      * @return bool
      */
-    public function userIsCreator($userId = null)
+    public function userIsCreator()
     {
-        if ($userId === null) {
-            $userId = auth()->user()->id;
-        }
-
-        return ACL::isAdmin($userId) or ($this->created_by_id == (int) $userId);
+        return $this->userHasAccess('is_owner');
     }
 
     /**
      * Проверка прав доступа.
      *
      * @param string       $acl
-     * @param bool         $checkOwn
-     * @param null|int $userId
-     *
      * @return bool
      */
-    public function userHasAccess($acl = 'section.edit', $checkOwn = true, $userId = null)
+    public function userHasAccess($acl = 'section.edit')
     {
-        return (acl_check('section_id.'.$this->getId().'.'.$acl) or ($checkOwn and $this->userIsCreator($userId)));
+        return Gate::allows($acl, $this);
     }
 
     /**
      * Проверка прав на редактирование.
      *
-     * @param null|int $userId
-     *
      * @return bool
      */
-    public function userHasAccessEdit($userId = null)
+    public function userHasAccessEdit()
     {
-        return $this->userHasAccess('section.edit', true, $userId);
+        return $this->userHasAccess('section.edit');
     }
 
     /**
      * Проверка прав на редактирование.
      *
-     * @param null|int $userId
-     *
      * @return bool
      */
-    public function userHasAccessCreate($userId = null)
+    public function userHasAccessCreate()
     {
-        return acl_check($this->type.'.'.'section.create');
+        return $this->userHasAccess('section.create');
     }
 
     /**
      * Проверка прав на просмотр.
      *
-     * @param null|int $userId
-     *
      * @return bool
      */
-    public function userHasAccessView($userId = null)
+    public function userHasAccessView()
     {
-        return $this->userHasAccess('section.view', true, $userId);
+        return $this->userHasAccess('section.view');
     }
 
     /**
      * Проверка прав на удаление.
      *
-     * @param null|int $userId
-     *
      * @return bool
      */
-    public function userHasAccessRemove($userId = null)
+    public function userHasAccessRemove()
     {
-        return $this->userHasAccess('section.remove', true, $userId);
+        return $this->userHasAccess('section.remove');
     }
 
     /**************************************************************************
