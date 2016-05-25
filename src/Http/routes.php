@@ -1,6 +1,6 @@
 <?php
 
-Route::group(['prefix' => backend_url_segment(), 'as' => 'backend.datasource.', 'middleware' => ['web', 'backend.auth']], function () {
+Route::group(['prefix' => backend_url_segment(), 'as' => 'backend.datasource.', 'middleware' => ['backend']], function () {
     Route::get('datasource/{id?}', [
         'as'   => 'list',
         'uses' => 'DatasourceController@getIndex',
@@ -31,7 +31,7 @@ Route::group(['prefix' => backend_url_segment(), 'as' => 'backend.datasource.', 
     ]);
 });
 
-Route::group(['as' => 'api.datasource.', 'middleware' => ['web', 'api', 'backend.auth']], function () {
+Route::group(['as' => 'api.datasource.', 'middleware' => ['api', 'backend']], function () {
     RouteAPI::get('datasource.headline', ['as' => 'headline', 'uses' => 'API\SectionController@getHeadline']);
     RouteAPI::post('datasource.field.visible', [
         'as'   => 'field.visible.set',
