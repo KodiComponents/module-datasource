@@ -24,7 +24,8 @@
     },
     "require": {
         "kodicms/module-loader": "3.*",
-        "kodicms/widgets": "*",
+        "kodicms/core": "0.*",
+        "kodicms/widgets": "0.*",
         "yajra/laravel-datatables-oracle": "~6.0"
     }
 }
