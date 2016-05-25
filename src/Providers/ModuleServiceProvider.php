@@ -2,19 +2,19 @@
 
 namespace KodiCMS\Datasource\Providers;
 
+use KodiCMS\Datasource\Console\Commands\DatasourceMigrate;
+use KodiCMS\Datasource\DatasourceManager;
+use KodiCMS\Datasource\Facades\DatasourceManager as DatasourceManagerFacade;
+use KodiCMS\Datasource\Facades\FieldGroupManager as FieldGroupManagerFacade;
+use KodiCMS\Datasource\Facades\FieldManager as FieldManagerFacade;
+use KodiCMS\Datasource\FieldGroupManager;
+use KodiCMS\Datasource\FieldManager;
 use KodiCMS\Datasource\Model\SectionFolder;
 use KodiCMS\Datasource\Navigation\Folder;
 use KodiCMS\Datasource\Navigation\Section;
 use KodiCMS\Datasource\Navigation\SectionType;
-use Yajra\Datatables\Datatables;
 use KodiCMS\Support\ServiceProvider;
-use KodiCMS\Datasource\FieldManager;
-use KodiCMS\Datasource\FieldGroupManager;
-use KodiCMS\Datasource\DatasourceManager;
-use KodiCMS\Datasource\Console\Commands\DatasourceMigrate;
-use KodiCMS\Datasource\Facades\FieldManager as FieldManagerFacade;
-use KodiCMS\Datasource\Facades\FieldGroupManager as FieldGroupManagerFacade;
-use KodiCMS\Datasource\Facades\DatasourceManager as DatasourceManagerFacade;
+use Yajra\Datatables\Datatables;
 
 class ModuleServiceProvider extends ServiceProvider
 {
@@ -60,14 +60,7 @@ class ModuleServiceProvider extends ServiceProvider
         $this->registerConsoleCommand(DatasourceMigrate::class);
     }
 
-    public function boot()
-    {
-        \Event::listen('config.loaded', function () {
-            $this->initNavigation();
-        }, 999);
-    }
-
-    protected function initNavigation()
+    public function contextBackend()
     {
         $datasourcePage = \Navigation::addPage([
             'id' => 'datasource',
