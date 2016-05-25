@@ -3,7 +3,6 @@
 namespace KodiCMS\Datasource\Model;
 
 use DatasourceManager;
-use Gate;
 use KodiCMS\Datasource\Document;
 use KodiCMS\Datasource\Fields\FieldsCollection;
 use KodiCMS\Datasource\Sections\SectionToolbar;
@@ -12,6 +11,7 @@ use KodiCMS\Datasource\Contracts\SectionInterface;
 use KodiCMS\Datasource\Exceptions\SectionException;
 use KodiCMS\Datasource\Contracts\SectionToolbarInterface;
 use KodiCMS\Datasource\Contracts\FieldsCollectionInterface;
+use KodiCMS\Users\Facades\BackendGate;
 
 class Section extends DatasourceModel implements SectionInterface
 {
@@ -407,7 +407,7 @@ class Section extends DatasourceModel implements SectionInterface
      */
     public function userHasAccess($acl = 'section.edit')
     {
-        return Gate::allows('datasource.'.$acl, $this);
+        return BackendGate::allows('datasource.'.$acl, $this);
     }
 
     /**
