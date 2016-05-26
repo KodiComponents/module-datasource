@@ -3,7 +3,7 @@
 namespace KodiCMS\Datasource\Http\Controllers;
 
 use WYSIWYG;
-use KodiCMS\Datasource\Repository\SectionRepository;
+use KodiCMS\Datasource\Repository\DocumentRepository;
 use KodiCMS\CMS\Http\Controllers\System\BackendController;
 
 class DocumentController extends BackendController
@@ -17,10 +17,10 @@ class DocumentController extends BackendController
     }
 
     /**
-     * @param SectionRepository $repository
+     * @param DocumentRepository $repository
      * @param int           $sectionId
      */
-    public function getCreate(SectionRepository $repository, $sectionId)
+    public function getCreate(DocumentRepository $repository, $sectionId)
     {
         WYSIWYG::loadAllEditors();
 
@@ -43,35 +43,33 @@ class DocumentController extends BackendController
     }
 
     /**
-     * @param SectionRepository $repository
+     * @param DocumentRepository $repository
      * @param                   $sectionId
      *
      * @return \Illuminate\Http\RedirectResponse
      */
-    public function postCreate(SectionRepository $repository, $sectionId)
+    public function postCreate(DocumentRepository $repository, $sectionId)
     {
-        $data = $this->request->all();
-        $repository->validateOnCreateDocument($sectionId, $data);
-
-        $document = $repository->createDocument($sectionId, $data);
+        $repository->validateOnCreate($sectionId, $this->request);
+        $document = $repository->createBySectionId($sectionId, $this->request->all());
 
         return $this->smartRedirect([
             $sectionId,
             $document->getId(),
-        ])
-            ->with('success', trans($this->wrapNamespace('core.messages.document_updated'), [
-                'title' => $document->getTitle(),
-            ]));
+        ])->with('success', trans($this->wrapNamespace('core.messages.document_updated'), [
+            'title' => $document->getTitle(),
+        ]));
     }
 
     /**
-     * @param SectionRepository $repository
+     * @param DocumentRepository $repository
      * @param int           $sectionId
      * @param int|string    $documentId
      */
-    public function getEdit(SectionRepository $repository, $sectionId, $documentId)
+    public function getEdit(DocumentRepository $repository, $sectionId, $documentId)
     {
         WYSIWYG::loadAllEditors();
+        
         $document = $repository->getDocumentById($sectionId, $documentId);
         $section = $document->getSection();
 
@@ -91,28 +89,22 @@ class DocumentController extends BackendController
     }
 
     /**
-     * @param SectionRepository $repository
+     * @param DocumentRepository $repository
      * @param int               $sectionId
      * @param int               $documentId
      *
      * @return \Illuminate\Http\RedirectResponse
      */
-    public function postEdit(SectionRepository $repository, $sectionId, $documentId)
+    public function postEdit(DocumentRepository $repository, $sectionId, $documentId)
     {
-        $document = $repository->getDocumentById($sectionId, $documentId);
-
-        $data = $this->request->all();
-
-        $repository->validateOnUpdateDocument($document, $data);
-
-        $document = $repository->updateDocument($document, $data);
+        $repository->validateOnUpdate($sectionId, $documentId, $this->request);
+        $document = $repository->updateBySectionId($sectionId, $documentId, $this->request->all());
 
         return $this->smartRedirect([
             $sectionId,
             $document->getId(),
-        ])
-            ->with('success', trans($this->wrapNamespace('core.messages.document_updated'), [
-                'title' => $document->getTitle(),
-            ]));
+        ])->with('success', trans($this->wrapNamespace('core.messages.document_updated'), [
+            'title' => $document->getTitle(),
+        ]));
     }
 }

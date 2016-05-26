@@ -2,12 +2,14 @@
 
 namespace KodiCMS\Datasource\Repository;
 
-use FieldManager;
 use DatasourceManager;
-use KodiCMS\Datasource\Model\Field;
+use FieldManager;
+use Illuminate\Http\Request;
 use KodiCMS\CMS\Repository\BaseRepository;
-use KodiCMS\Datasource\Exceptions\FieldException;
+use KodiCMS\Datasource\Contracts\FieldInterface;
 use KodiCMS\Datasource\Contracts\FieldTypeRelationInterface;
+use KodiCMS\Datasource\Exceptions\FieldException;
+use KodiCMS\Datasource\Model\Field;
 
 class FieldRepository extends BaseRepository
 {
@@ -22,28 +24,19 @@ class FieldRepository extends BaseRepository
     /**
      * @return array
      */
-    public function validatorAttributeNames()
+    public function validationAttributes()
     {
-        return [
-            'key'                => trans('datasource::core.field.key'),
-            'name'               => trans('datasource::core.field.name'),
-            'type'               => trans('datasource::core.field.type'),
-            'related_section_id' => trans('datasource::core.field.related_section_id'),
-            'related_field_id'   => trans('datasource::core.field.related_field_id'),
-            'section_id'         => trans('datasource::core.field.section_id'),
-        ];
+        return trans('datasource::core.field');
     }
 
     /**
-     * @param array $data
-     *
-     * @return bool
-     * @throws \KodiCMS\CMS\Exceptions\ValidationException
+     * @param         $sectionId
+     * @param Request $request
      */
-    public function validateOnCreate(array $data = [])
+    public function validateOnCreate($sectionId, Request $request)
     {
-        $validator = $this->validator($data, [
-            'key'  => 'required|unique:datasource_fields,key,NULL,id,section_id,'.array_get($data, 'section_id'),
+        $validator = $this->getValidationFactory()->make($request->all(), [
+            'key' => "required|unique:datasource_fields,key,NULL,id,section_id,{$sectionId}",
             'type' => 'required',
             'name' => 'required',
         ]);
@@ -54,22 +47,18 @@ class FieldRepository extends BaseRepository
             }
         });
 
-        return $this->_validate($validator);
+        $this->validateWith($validator, $request);
     }
 
     /**
-     * @param array $data
-     *
-     * @return bool
-     * @throws \KodiCMS\CMS\Exceptions\ValidationException
+     * @param int     $id
+     * @param Request $request
      */
-    public function validateOnUpdate(array $data = [])
+    public function validateOnUpdate($id, Request $request)
     {
-        $validator = $this->validator($data, [
+        $this->validate($request, [
             'name' => 'required',
         ]);
-
-        return $this->_validate($validator);
     }
 
     /**
@@ -88,8 +77,9 @@ class FieldRepository extends BaseRepository
             throw new FieldException("Datasource field type {$type} not found");
         }
 
+        /** @var FieldInterface $field */
         $field = parent::create($data);
-        FieldManager::addFieldToSectionTable($field->section, $field);
+        FieldManager::addFieldToSectionTable($field->getSection(), $field);
 
         return $field;
     }
@@ -107,8 +97,8 @@ class FieldRepository extends BaseRepository
     }
 
     /**
-     * @param int $fieldId
-     * @param bool    $status
+     * @param int  $fieldId
+     * @param bool $status
      */
     public function updateVisible($fieldId, $status)
     {

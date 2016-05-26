@@ -2,9 +2,10 @@
 
 namespace KodiCMS\Datasource\Http\Controllers;
 
+use KodiCMS\CMS\Http\Controllers\System\BackendController;
+use KodiCMS\Datasource\Contracts\FieldInterface;
 use KodiCMS\Datasource\Repository\FieldRepository;
 use KodiCMS\Datasource\Repository\SectionRepository;
-use KodiCMS\CMS\Http\Controllers\System\BackendController;
 
 class FieldController extends BackendController
 {
@@ -34,22 +35,23 @@ class FieldController extends BackendController
 
     /**
      * @param FieldRepository $repository
-     * @param int         $dsId
+     * @param int             $sectionId
      *
      * @return \Illuminate\Http\RedirectResponse
      * @throws \KodiCMS\Datasource\Exceptions\FieldException
      */
-    public function postCreate(FieldRepository $repository, $dsId)
+    public function postCreate(FieldRepository $repository, $sectionId)
     {
-        $data = $this->request->except(['section_id', 'is_system']);
-        $data['section_id'] = $dsId;
-        $repository->validateOnCreate($data);
-        $field = $repository->create($data);
+        $this->request->offsetSet('section_id', $sectionId);
+        $repository->validateOnCreate($sectionId, $this->request);
+
+        /** @var FieldInterface $field */
+        $field = $repository->create($this->request->all());
 
         return redirect()
-            ->route('backend.datasource.field.edit', $field->id)
+            ->route('backend.datasource.field.edit', $field->getId())
             ->with('success', trans($this->wrapNamespace('core.messages.field.created'), [
-                'title' => $field->name,
+                'title' => $field->getName(),
             ]));
     }
 
@@ -59,8 +61,10 @@ class FieldController extends BackendController
      */
     public function getEdit(FieldRepository $repository, $fieldId)
     {
+        /** @var FieldInterface $field */
         $field = $repository->findOrFail($fieldId);
-        $section = $field->section;
+
+        $section = $field->getSection();
 
         $this->breadcrumbs
             ->add($section->getName(), route('backend.datasource.list', $section->getId()))
@@ -86,18 +90,14 @@ class FieldController extends BackendController
      */
     public function postEdit(FieldRepository $repository, $fieldId)
     {
-        $data = $this->request->except(['key', 'section_id', 'is_system', 'related_section_id', 'type']);
+        $repository->validateOnUpdate($fieldId, $this->request);
 
-        $repository->validateOnUpdate($data);
-        $field = $repository->update($fieldId, $data);
+        /** @var FieldInterface $field */
+        $field = $repository->update($fieldId, $this->request->all());
 
         return $this->smartRedirect([$field->getId()])
             ->with('success', trans($this->wrapNamespace('core.messages.field.updated'), [
                 'title' => $field->getName(),
             ]));
-    }
-
-    public function getLocation()
-    {
     }
 }

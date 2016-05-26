@@ -4,6 +4,8 @@ namespace KodiCMS\Datasource\Http\Controllers;
 
 use Assets;
 use DatasourceManager;
+use KodiCMS\Datasource\Contracts\SectionInterface;
+use KodiCMS\Datasource\Exceptions\SectionException;
 use KodiCMS\Datasource\Model\SectionFolder;
 use KodiCMS\Datasource\Repository\SectionRepository;
 use KodiCMS\CMS\Http\Controllers\System\BackendController;
@@ -26,6 +28,8 @@ class DatasourceController extends BackendController
         if (is_null($sectionId)) {
             $sectionId = $this->request->cookie(static::DS_COOKIE_NAME);
         }
+
+        /** @var SectionInterface $section */
 
         if (is_null($sectionId)) {
             $section = $repository->query()->first();
@@ -90,17 +94,16 @@ class DatasourceController extends BackendController
     public function postCreate(SectionRepository $repository, $type)
     {
         $type = strtolower($type);
+        $this->request->offsetSet('type', $type);
 
-        $data = $this->request->except(['type']);
-        $data['type'] = $type;
+        $repository->validateOnCreate($this->request);
 
-        $repository->validateOnCreate($data);
-
-        $section = $repository->create($data);
+        /** @var SectionInterface $section */
+        $section = $repository->create($this->request->all());
 
         return $this->smartRedirect([$section->getId()])
             ->with('success', trans($this->wrapNamespace('core.messages.section.created'), [
-                'title' => $section->name,
+                'title' => $section->getName(),
             ]));
     }
 
@@ -112,11 +115,17 @@ class DatasourceController extends BackendController
      */
     public function getEdit(SectionRepository $repository, $sectionId)
     {
+        /** @var SectionInterface $section */
         $section = $repository->findOrFail($sectionId);
 
-        $this->breadcrumbs->add($section->getName(), route('backend.datasource.list', $section->getId()));
+        $this->breadcrumbs->add(
+            $section->getName(),
+            route('backend.datasource.list', $section->getId())
+        );
 
-        $this->setTitle(trans($this->wrapNamespace('core.title.edit'), ['name' => $section->getName()]));
+        $this->setTitle(
+            trans($this->wrapNamespace('core.title.edit'), ['name' => $section->getName()])
+        );
 
         $this->setContent($section->getType()->getEditTemplate(), [
             'section' => $section,
@@ -132,9 +141,10 @@ class DatasourceController extends BackendController
      */
     public function postEdit(SectionRepository $repository, $sectionId)
     {
-        $data = $this->request->except(['type']);
-        $repository->validateOnUpdate($data);
-        $section = $repository->update($sectionId, $data);
+        $repository->validateOnUpdate($sectionId, $this->request);
+
+        /** @var SectionInterface $section */
+        $section = $repository->update($sectionId, $this->request->all());
 
         return $this->smartRedirect([$section->getId()])
             ->with('success', trans($this->wrapNamespace('core.messages.section.updated'), [

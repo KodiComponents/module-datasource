@@ -2,8 +2,9 @@
 
 namespace KodiCMS\Datasource\Repository;
 
-use KodiCMS\Datasource\Model\FieldGroup;
+use Illuminate\Http\Request;
 use KodiCMS\CMS\Repository\BaseRepository;
+use KodiCMS\Datasource\Model\FieldGroup;
 
 class FieldGroupRepository extends BaseRepository
 {
@@ -16,44 +17,26 @@ class FieldGroupRepository extends BaseRepository
     }
 
     /**
-     * @param array $data
-     *
-     * @return bool
-     * @throws \KodiCMS\CMS\Exceptions\ValidationException
+     * @param Request $request
      */
-    public function validateOnCreate(array $data = [])
+    public function validateOnCreate(Request $request)
     {
-        $validator = $this->validator($data, [
-            'name'       => 'required',
+        $this->validate($request, [
+            'name' => 'required',
             'section_id' => 'required',
         ]);
-
-        return $this->_validate($validator);
     }
 
     /**
-     * @param array $data
+     * @param int     $id
+     * @param Request $request
      *
-     * @return bool
-     * @throws \KodiCMS\CMS\Exceptions\ValidationException
+     * @return mixed
      */
-    public function validateOnUpdate(array $data = [])
+    public function validateOnUpdate($id, Request $request)
     {
-        $validator = $this->validator($data, [
+        $this->validate($request, [
             'name' => 'required',
         ]);
-
-        return $this->_validate($validator);
-    }
-
-    /**
-     * @param array $data
-     *
-     * @return \Illuminate\Database\Eloquent\Model
-     * @throws FieldException
-     */
-    public function create(array $data = [])
-    {
-        return parent::create($data);
     }
 }

@@ -3,30 +3,30 @@
 namespace KodiCMS\Datasource\Http\Controllers\API;
 
 use KodiCMS\API\Http\Controllers\System\Controller;
-use KodiCMS\Datasource\Repository\SectionRepository;
+use KodiCMS\Datasource\Repository\DocumentRepository;
 
 class DocumentController extends Controller
 {
     /**
-     * @param SectionRepository $repository
+     * @param DocumentRepository $repository
      */
-    public function deleteDelete(SectionRepository $repository)
+    public function deleteDelete(DocumentRepository $repository)
     {
         $docIds = $this->getRequiredParameter('document');
         $sectionId = $this->getRequiredParameter('section_id');
 
-        $repository->deleteDocuments($sectionId, $docIds);
+        $repository->deleteBySectionId($sectionId, $docIds);
     }
 
     /**
-     * @param SectionRepository $repository
+     * @param DocumentRepository $repository
      */
-    public function getFind(SectionRepository $repository)
+    public function getFind(DocumentRepository $repository)
     {
         $sectionId = $this->getRequiredParameter('section_id');
         $keyword = $this->getParameter('q');
 
-        $documents = $repository->getDocumentsForRelationField($sectionId, $keyword);
+        $documents = $repository->findByKeyword($sectionId, $keyword);
 
         $this->setContent($documents);
     }
