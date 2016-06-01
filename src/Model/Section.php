@@ -3,6 +3,7 @@
 namespace KodiCMS\Datasource\Model;
 
 use DatasourceManager;
+use KodiCMS\Datasource\Contracts\DocumentInterface;
 use KodiCMS\Datasource\Document;
 use KodiCMS\Datasource\Fields\FieldsCollection;
 use KodiCMS\Datasource\Sections\SectionToolbar;
@@ -104,6 +105,12 @@ class Section extends DatasourceModel implements SectionInterface
         'created_by_id' => 'integer',
         'settings'      => 'array',
     ];
+    /**
+     * The accessors to append to the model's array form.
+     *
+     * @var array
+     */
+    protected $appends = ['documentPrimaryKey', 'documentTitleKey'];
 
     /**
      * @return int
@@ -124,9 +131,25 @@ class Section extends DatasourceModel implements SectionInterface
     /**
      * @return string
      */
+    public function getDocumentPrimaryKeyAttribute()
+    {
+        return $this->getDocumentPrimaryKey();
+    }
+
+    /**
+     * @return string
+     */
     public function getDocumentTitleKey()
     {
         return $this->documentTitleKey;
+    }
+
+    /**
+     * @return string
+     */
+    public function getDocumentTitleKeyAttribute()
+    {
+        return $this->getDocumentTitleKey();
     }
 
     /**
@@ -308,19 +331,19 @@ class Section extends DatasourceModel implements SectionInterface
      **************************************************************************/
 
     /**
-     * @return Document
+     * @param array $attributes
+     *
+     * @return DocumentInterface
      */
     public function getEmptyDocument(array $attributes = [])
     {
-        $documentClass = $this->getDocumentClass();
-
-        return new $documentClass([], $this);
+        return $this->newDocumentQuery($attributes);
     }
 
     /**
      * @param array $attributes
      *
-     * @return Document
+     * @return DocumentInterface
      */
     public function newDocumentQuery(array $attributes = [])
     {

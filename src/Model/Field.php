@@ -20,7 +20,7 @@ use KodiCMS\Widgets\Contracts\Widget as WidgetInterface;
 use KodiCMS\Datasource\Contracts\SectionHeadlineInterface;
 use KodiCMS\CMS\Http\Controllers\System\TemplateController;
 
-class Field extends DatasourceModel implements FieldInterface, Arrayable
+class Field extends DatasourceModel implements FieldInterface
 {
     protected static function boot()
     {
@@ -724,7 +724,10 @@ class Field extends DatasourceModel implements FieldInterface, Arrayable
             $template = $this->getType()->getDocumentTemplate();
         }
 
-        return view($template, array_merge($this->toArray(), $this->fetchDocumentTemplateValues($document)))->render();
+        $data = $this->toArray();
+        $data['field'] = $this;
+
+        return view($template, array_merge($data, $this->fetchDocumentTemplateValues($document)))->render();
     }
 
     /**
@@ -759,12 +762,13 @@ class Field extends DatasourceModel implements FieldInterface, Arrayable
      */
     public function toArray()
     {
-        return [
+        $array = parent::toArray();
+
+        return $array + [
             'id'    => $this->getId(),
             'key'   => $this->getDBKey(),
             'name'  => $this->getName(),
-            'hint'  => $this->getHint(),
-            'field' => $this,
+            'hint'  => $this->getHint()
         ];
     }
 

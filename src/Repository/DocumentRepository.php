@@ -52,7 +52,7 @@ class DocumentRepository extends BaseRepository
      */
     public function validateOnUpdate($sectionId, $documentId, Request $request)
     {
-        $document = $this->section->getDocumentById($sectionId, $documentId);
+        $document = $this->getDocumentById($sectionId, $documentId);
 
         /** @var Validator $validator */
         $validator = $this->getValidationFactory()->make($request->all(), []);
@@ -107,7 +107,7 @@ class DocumentRepository extends BaseRepository
      */
     public function updateBySectionId($sectionId, $documentId, array $data)
     {
-        $document = $this->section->getDocumentById($sectionId, $documentId);
+        $document = $this->getDocumentById($sectionId, $documentId);
         $document->update(array_only($data, $document->getEditableFields()->getKeys()));
 
         return $document;
@@ -134,12 +134,13 @@ class DocumentRepository extends BaseRepository
     }
 
     /**
-     * @param int     $sectionId
+     * @param int         $sectionId
      * @param string|null $keyword
+     * @param array       $exclude
      *
      * @return array|static[]
      */
-    public function findByKeyword($sectionId, $keyword = null)
+    public function findByKeyword($sectionId, $keyword = null, array $exclude = [])
     {
         /** @var SectionInterface $section */
         $section = $this->section->findOrFail($sectionId);
@@ -149,6 +150,8 @@ class DocumentRepository extends BaseRepository
             ->selectRaw("{$section->getDocumentPrimaryKey()} as id")
             ->selectRaw("{$section->getDocumentTitleKey()} as text")
             ->where($section->getDocumentTitleKey(), 'like', '%'.$keyword.'%')
+            ->whereNotIn($section->getDocumentPrimaryKey(), $exclude)
+            ->limit(10)
             ->get();
     }
 }

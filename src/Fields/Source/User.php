@@ -54,6 +54,23 @@ class User extends Source implements FieldTypeRelationInterface
         $query->with($this->getRelationName());
     }
 
+
+    /**
+     * @return SectionInterface
+     */
+    public function getRelatedSection()
+    {
+
+    }
+
+    /**
+     * @return FieldInterface
+     */
+    public function getRelatedField()
+    {
+        
+    }
+
     /**
      * @param DocumentInterface $document
      *

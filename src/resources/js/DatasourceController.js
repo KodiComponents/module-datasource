@@ -1,3 +1,7 @@
+CMS.controllers.add(['document.get.edit', 'document.get.create'], function () {
+    new Vue({el: '#content'});
+});
+
 CMS.controllers.add('datasource.get.index', function () {
     $('.mail-nav').height($('.mail-container').height());
 

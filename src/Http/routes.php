@@ -48,6 +48,8 @@ Route::group(['as' => 'api.datasource.', 'middleware' => ['api', 'backend']], fu
     ]);
 
     RouteAPI::get('datasource.document.find', ['as' => 'document.find', 'uses' => 'API\DocumentController@getFind']);
+    RouteAPI::post('datasource.document.related', ['as' => 'document.related', 'uses' => 'API\DocumentController@addRelated']);
+    RouteAPI::delete('datasource.document.related', ['as' => 'document.related', 'uses' => 'API\DocumentController@deleteRelated']);
 
     RouteAPI::get('datasource.menu.get', ['as' => 'menu.get', 'uses' => 'API\MenuController@getMenu']);
     RouteAPI::get('datasource.folder.get', ['as' => 'folder.get', 'uses' => 'API\MenuController@getFolderById']);

@@ -2,6 +2,7 @@
 
 namespace KodiCMS\Datasource\Fields\Source;
 
+use Illuminate\Database\Eloquent\Collection;
 use Request;
 use DatasourceManager;
 use KodiCMS\Datasource\Fields\Relation;
@@ -23,13 +24,13 @@ class Images extends Relation\ManyToMany
      */
     public function getRelatedDocumentValues(DocumentInterface $document)
     {
-        if (! is_null($relatedField = $this->relatedField)) {
+        if (! is_null($relatedField = $this->getRelatedField())) {
             $section = $relatedField->getSection();
 
-            return $this->getDocumentRelation($document, $section, $relatedField)->get()->all();
+            return $this->getDocumentRelation($document, $section, $relatedField)->get();
         }
 
-        return [];
+        return new Collection();
     }
 
     /**
@@ -40,7 +41,7 @@ class Images extends Relation\ManyToMany
     {
         $documentIds = [];
 
-        $section = $this->relatedSection;
+        $section = $this->getRelatedSection();
 
         Model::unguard();
         foreach ($value as $file) {
@@ -100,7 +101,7 @@ class Images extends Relation\ManyToMany
      */
     public function getAllowedTypes()
     {
-        return $this->relatedSection->getFields()->getByKey('image')->getAllowedTypes();
+        return $this->getRelatedSection()->getFields()->getByKey('image')->getAllowedTypes();
     }
 
     /**
@@ -108,6 +109,6 @@ class Images extends Relation\ManyToMany
      */
     public function getMaxFileSize()
     {
-        return $this->relatedSection->getFields()->getByKey('image')->getMaxFileSize();
+        return $this->getRelatedSection()->getFields()->getByKey('image')->getMaxFileSize();
     }
 }

@@ -2,38 +2,23 @@
 
 namespace KodiCMS\Datasource\Model;
 
-use Illuminate\Validation\Validator;
-use KodiCMS\Support\Traits\Tentacle;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Validation\Validator;
+use KodiCMS\CMS\Http\Controllers\System\TemplateController;
+use KodiCMS\Datasource\Contracts\DocumentInterface;
+use KodiCMS\Datasource\Contracts\FieldTypeDateInterface;
+use KodiCMS\Datasource\Contracts\FieldTypeOnlySystemInterface;
+use KodiCMS\Datasource\Contracts\FieldTypeRelationInterface;
+use KodiCMS\Datasource\Contracts\SectionHeadlineInterface;
+use KodiCMS\Datasource\Contracts\SectionInterface;
 use KodiCMS\Datasource\Fields\FieldsCollection;
 use KodiCMS\Datasource\Observers\DocumentObserver;
-use KodiCMS\Datasource\Contracts\SectionInterface;
-use KodiCMS\Datasource\Contracts\DocumentInterface;
+use KodiCMS\Support\Traits\Tentacle;
 use KodiCMS\Widgets\Contracts\Widget as WidgetInterface;
-use KodiCMS\Datasource\Contracts\FieldTypeDateInterface;
-use KodiCMS\Datasource\Contracts\SectionHeadlineInterface;
-use KodiCMS\CMS\Http\Controllers\System\TemplateController;
-use KodiCMS\Datasource\Contracts\FieldTypeRelationInterface;
-use KodiCMS\Datasource\Contracts\FieldTypeOnlySystemInterface;
 
 class Document extends Model implements DocumentInterface
 {
     use Tentacle;
-
-    const COND_EQ = 0;
-    const COND_BTW = 1;
-    const COND_GT = 2;
-    const COND_LT = 3;
-    const COND_GTEQ = 4;
-    const COND_LTEQ = 5;
-    const COND_CONTAINS = 6;
-    const COND_LIKE = 7;
-    const COND_NULL = 8;
-
-    const FILTER_VALUE_PLAIN = 20;
-    const FILTER_VALUE_GET = 40;
-    const FILTER_VALUE_POST = 50;
-    const FILTER_VALUE_BEHAVIOR = 30;
 
     protected static function boot()
     {
@@ -83,6 +68,13 @@ class Document extends Model implements DocumentInterface
     protected $formTemplate = 'datasource::document.partials.form';
 
     /**
+     * The accessors to append to the model's array form.
+     *
+     * @var array
+     */
+    protected $appends = ['section'];
+
+    /**
      * @param array                 $attributes
      * @param SectionInterface|null $section
      */
@@ -104,12 +96,10 @@ class Document extends Model implements DocumentInterface
 
                 // TODO: подумать как это оптимизировать
                 if ($field instanceof FieldTypeRelationInterface) {
-                    $relatedSection = $field->relatedSection;
-                    $relatedField = $field->relatedField;
+                    $relatedSection = $field->getRelatedSection();
+                    $relatedField = $field->getRelatedField();
 
-                    $this->addRelation($field->getRelationName(), function () use (
-                        $field, $relatedSection, $relatedField
-                    ) {
+                    $this->addRelation($field->getRelationName(), function () use ($field, $relatedSection, $relatedField) {
                         return $field->getDocumentRelation($this, $relatedSection, $relatedField);
                     });
                 }
@@ -235,7 +225,11 @@ class Document extends Model implements DocumentInterface
      */
     protected function mutateAttribute($key, $value)
     {
-        return $this->getSectionFields()->getByKey($key)->onGetDocumentValue($this, $value);
+        if ($this->hasField($key)) {
+            return $this->getSectionFields()->getByKey($key)->onGetDocumentValue($this, $value);
+        }
+
+        return parent::mutateAttribute($key, $value);
     }
 
     /**
@@ -347,6 +341,14 @@ class Document extends Model implements DocumentInterface
     public function getSection()
     {
         return $this->section;
+    }
+
+    /**
+     * @return SectionInterface
+     */
+    public function getSectionAttribute()
+    {
+        return $this->getSection();
     }
 
     /**
@@ -554,5 +556,13 @@ class Document extends Model implements DocumentInterface
     public function newEloquentBuilder($query)
     {
         return new DocumentQueryBuilder($query, $this->section);
+    }
+
+    /**
+     * @return mixed
+     */
+    public function withFields()
+    {
+        return $this->newQuery()->with($this->getCustomRelations());
     }
 }

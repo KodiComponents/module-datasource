@@ -46,15 +46,13 @@ class BelongsTo extends Relation implements FieldTypeOnlySystemInterface
      *
      * @return BelongsToRelation
      */
-    public function getDocumentRelation(
-        DocumentInterface $document, SectionInterface $relatedSection = null, FieldInterface $relatedField = null
-    ) {
+    public function getDocumentRelation(DocumentInterface $document, SectionInterface $relatedSection = null, FieldInterface $relatedField = null) {
         $instance = $relatedSection->getEmptyDocument()->newQuery();
 
         $foreignKey = $this->getSection()->getDocumentPrimaryKey();
         $otherKey = str_replace('_belongs_to', '', $this->getDBKey());
         $relation = $this->getRelationName();
 
-        return new BelongsToRelation($instance, $document, $foreignKey, $otherKey, $relation);
+        return new BelongsToRelation($instance, $document, $otherKey, $foreignKey, $relation);
     }
 }

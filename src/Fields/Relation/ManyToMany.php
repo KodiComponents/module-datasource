@@ -61,7 +61,14 @@ class ManyToMany extends Relation
         $relatedDocument = $relatedSection->getEmptyDocument();
         $builder = $relatedDocument->newQuery();
 
-        return new BelongsToManyRelation($builder, $document, $this->getRelatedTable(), $this->getDBKey(), $relatedField->getDBKey(), $this->getRelationName());
+        return new BelongsToManyRelation(
+            $builder,
+            $document,
+            $this->getRelatedTable(),
+            $this->getDBKey(),
+            $relatedField->getDBKey(),
+            $this->getRelationName()
+        );
     }
 
     /**
@@ -71,16 +78,14 @@ class ManyToMany extends Relation
      */
     public function getRelatedDocumentValues(DocumentInterface $document)
     {
-        if (! is_null($relatedField = $this->relatedField)) {
+        if (! is_null($relatedField = $this->getRelatedField())) {
             $section = $relatedField->getSection();
 
             return $this->getDocumentRelation($document, $section, $relatedField)
-                ->get()
-                ->lists($section->getDocumentTitleKey(), $section->getDocumentPrimaryKey())
-                ->all();
+                ->pluck($section->getDocumentTitleKey(), $section->getDocumentPrimaryKey());
         }
 
-        return [];
+        return new Collection();
     }
 
     /**
@@ -134,7 +139,7 @@ class ManyToMany extends Relation
      */
     public function onRelatedDocumentDeleting(DocumentInterface $document)
     {
-        $document->{$this->relatedField->getRelationName()}()->detach($document->getId());
+        $document->{$this->getRelatedField()->getRelationName()}()->detach($document->getId());
     }
 
     /**
@@ -151,7 +156,7 @@ class ManyToMany extends Relation
         $relatedTable = 'ds_mtm_'.uniqid();
         $relatedField = null;
 
-        if (is_null($this->relatedFieldKey) or is_null($relatedSection = $this->relatedSection) or is_null($relatedField = $relatedSection->getFields()->getByKey($this->relatedFieldKey))) {
+        if (is_null($this->relatedFieldKey) or is_null($relatedSection = $this->getRelatedSection()) or is_null($relatedField = $relatedSection->getFields()->getByKey($this->relatedFieldKey))) {
             $relatedField = $repository->create([
                 'type'               => $this->relatedFieldType,
                 'section_id'         => $this->getRelatedSectionId(),
@@ -187,8 +192,8 @@ class ManyToMany extends Relation
      */
     protected function fetchDocumentTemplateValues(DocumentInterface $document)
     {
-        $relatedSection = $this->relatedSection;
-        $relatedField = $this->relatedField;
+        $relatedSection = $this->getRelatedSection();
+        $relatedField = $this->getRelatedField();
 
         return [
             'value'            => $this->getRelatedDocumentValues($document),
@@ -205,7 +210,7 @@ class ManyToMany extends Relation
      */
     public function onDeleted(FieldRepository $repository)
     {
-        if (! is_null($relatedField = $this->relatedField)) {
+        if (! is_null($relatedField = $this->getRelatedField())) {
             $relatedField->delete();
         }
 

@@ -4,25 +4,59 @@
 	</label>
 
 	<div class="col-md-10 col-sm-9">
-		<div class="input-group">
-			{!! Form::select($key . '[]', $value, array_keys($value), [
-				'id' => $key, 'class' => 'col-md-12 no-script',
-				'multiple',
-				'data-related-many' => $relatedSection->getId(),
-				'data-related-name' => $relatedSection->getName()
-			]) !!}
-
-			<div class="input-group-btn">
-				{!! link_to_route('backend.datasource.document.create', trans('datasource::fields.has_one.create_document'), [$relatedSection->getId()], [
-					'data-icon' => 'plus',
-					'class' => 'btn btn-success popup fancybox.iframe',
-					'data-target' => $key
-				]) !!}
-			</div>
-		</div>
+		<relation-hm relation="{{ $field->getRelationFieldName() }}" key="{{ $key }}"></relation-hm>
 
 		@if($hint)
 		<p class="help-block">{{ $hint }}</p>
 		@endif
 	</div>
 </div>
+
+<!-- template for child -->
+<template id="hm-template">
+	<div class="panel">
+		<div class="panel-heading">
+			<h3 class="panel-title">@{{ section.name }}</h3>
+		</div>
+		<div class="panel-body">
+			<select type="text" class="form-control"></select>
+		</div>
+		<table class="table table-info" v-if="records.length">
+			<colgroup>
+				<col width="50px">
+				<col>
+				<col width="50px">
+			</colgroup>
+			<thead>
+			<tr>
+				<th>ID</th>
+				<th>Title</th>
+				<th></th>
+			</tr>
+			</thead>
+			<tbody>
+			<tr v-for="record in records">
+				<td>
+					@{{ record.id }}
+					<input type="hidden" name="{{ $key }}[]" value="@{{ record.id }}" />
+				</td>
+				<th>
+					<a href="@{{ record.url }}" class="popup">@{{ record.title }}</a>
+				</th>
+				<th>
+					<button type="button" class="btn btn-xs btn-danger" @click="removeRecord(record)">
+					<i class="fa fa-times"></i>
+					</button>
+				</th>
+			</tr>
+			</tbody>
+		</table>
+		<div class="panel-footer">
+			{!! link_to_route('backend.datasource.document.create', trans('datasource::fields.has_one.create_document'), [$relatedSection->getId()], [
+                'data-icon' => 'plus',
+                'class' => 'btn btn-success btn-labeled popup fancybox.iframe',
+                'data-target' => $key
+            ]) !!}
+		</div>
+	</div>
+</template>

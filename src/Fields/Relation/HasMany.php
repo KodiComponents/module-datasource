@@ -2,13 +2,14 @@
 
 namespace KodiCMS\Datasource\Fields\Relation;
 
-use KodiCMS\Datasource\Fields\Relation;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Collection;
+use Illuminate\Database\Eloquent\Relations\HasMany as HasManyRelation;
+use KodiCMS\Datasource\Contracts\DocumentInterface;
 use KodiCMS\Datasource\Contracts\FieldInterface;
 use KodiCMS\Datasource\Contracts\SectionInterface;
+use KodiCMS\Datasource\Fields\Relation;
 use KodiCMS\Datasource\Repository\FieldRepository;
-use KodiCMS\Datasource\Contracts\DocumentInterface;
-use Illuminate\Database\Eloquent\Relations\HasMany as HasManyRelation;
 
 class HasMany extends Relation
 {
@@ -47,10 +48,20 @@ class HasMany extends Relation
      */
     public function onDocumentFill(DocumentInterface $document, $value)
     {
-        if (! is_null($relatedField = $this->relatedField)) {
-            $documents = $relatedField->getSection()->getEmptyDocument()->whereIn('id', $value)->get();
+        if (! is_null($relatedField = $this->getRelatedField())) {
+            $section = $relatedField->getSection();
 
-            $document->{$this->getRelationName()}()->saveMany($documents);
+            $documents = $section->newDocumentQuery()
+                ->whereIn($section->getDocumentPrimaryKey(), $value)
+                ->get();
+
+            $currentDocuments = $this->getRelatedDocumentValues($document);
+
+            $newIds = $documents->diff($currentDocuments);
+
+            if ($newIds->count() > 0) {
+                $document->{$this->getRelationName()}()->saveMany($newIds);
+            }
         }
     }
 
@@ -61,16 +72,14 @@ class HasMany extends Relation
      */
     public function getRelatedDocumentValues(DocumentInterface $document)
     {
-        if (! is_null($relatedField = $this->relatedField)) {
+        if (! is_null($relatedField = $this->getRelatedField())) {
             $section = $relatedField->getSection();
 
             return $this->getDocumentRelation($document, $section)
-                ->get()
-                ->lists($section->getDocumentTitleKey(), $section->GetDocumentPrimaryKey())
-                ->all();
+                ->pluck($section->getDocumentTitleKey(), $section->GetDocumentPrimaryKey());
         }
 
-        return [];
+        return new Collection();
     }
 
     /**
@@ -85,7 +94,7 @@ class HasMany extends Relation
     ) {
         $instance = $relatedSection->getEmptyDocument()->newQuery();
 
-        $foreignKey = $this->relatedField->getDBKey();
+        $foreignKey = $this->getRelatedField()->getDBKey();
         $localKey = $relatedSection->getDocumentPrimaryKey();
 
         return new HasManyRelation($instance, $document, $foreignKey, $localKey);

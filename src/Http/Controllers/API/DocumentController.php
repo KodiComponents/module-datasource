@@ -25,8 +25,9 @@ class DocumentController extends Controller
     {
         $sectionId = $this->getRequiredParameter('section_id');
         $keyword = $this->getParameter('q');
+        $excludeIds = (array) $this->getParameter('exclude', []);
 
-        $documents = $repository->findByKeyword($sectionId, $keyword);
+        $documents = $repository->findByKeyword($sectionId, $keyword, $excludeIds);
 
         $this->setContent($documents);
     }

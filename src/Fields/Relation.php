@@ -3,6 +3,8 @@
 namespace KodiCMS\Datasource\Fields;
 
 use DatasourceManager;
+use KodiCMS\Datasource\Contracts\FieldInterface;
+use KodiCMS\Datasource\Contracts\SectionInterface;
 use KodiCMS\Datasource\Model\Field;
 use KodiCMS\Datasource\Contracts\DocumentInterface;
 use KodiCMS\Widgets\Contracts\Widget as WidgetInterface;
@@ -59,18 +61,42 @@ abstract class Relation extends Field implements FieldTypeRelationInterface
     }
 
     /**
+     * @return string
+     */
+    public function getRelationFieldName()
+    {
+        return snake_case($this->getRelationName());
+    }
+
+    /**
+     * @return SectionInterface
+     */
+    public function getRelatedSection()
+    {
+        return $this->relatedSection;
+    }
+
+    /**
+     * @return FieldInterface
+     */
+    public function getRelatedField()
+    {
+        return $this->relatedField;
+    }
+
+    /**
      * @param DocumentInterface $document
      *
      * @return array
      */
     protected function fetchDocumentTemplateValues(DocumentInterface $document)
     {
-        $relatedSection = $this->relatedSection;
+        $relatedSection = $this->getRelatedSection();
 
         return array_merge(parent::fetchDocumentTemplateValues($document), [
             'relatedDocument' => $this->getDocumentRelation($document, $relatedSection)->first(),
             'relatedSection'  => $relatedSection,
-            'relatedField'    => $this->relatedField,
+            'relatedField'    => $this->getRelatedField(),
         ]);
     }
 

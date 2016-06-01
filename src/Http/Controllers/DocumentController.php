@@ -9,6 +9,14 @@ use KodiCMS\CMS\Http\Controllers\System\BackendController;
 class DocumentController extends BackendController
 {
     /**
+     * @return string
+     */
+    public function getRouterController()
+    {
+        return 'DatasourceController';
+    }
+
+    /**
      * @return \Illuminate\Http\RedirectResponse
      */
     public function getIndex()
@@ -31,8 +39,8 @@ class DocumentController extends BackendController
 
         $this->setTitle($section->getCreateDocumentTitle());
 
-        $this->templateScripts['SECTION'] = $section;
         $this->templateScripts['DOCUMENT'] = $document;
+        $this->templateScripts['FIELDS'] = $document->getSectionFields();
         $document->onControllerLoad($this);
 
         $this->setContent($document->getCreateTemplate(), [
@@ -69,8 +77,8 @@ class DocumentController extends BackendController
     public function getEdit(DocumentRepository $repository, $sectionId, $documentId)
     {
         WYSIWYG::loadAllEditors();
-        
-        $document = $repository->getDocumentById($sectionId, $documentId);
+
+        $document = $repository->getEmptyDocument($sectionId)->withFields()->findOrFail($documentId);
         $section = $document->getSection();
 
         $document->onControllerLoad($this);
@@ -78,8 +86,8 @@ class DocumentController extends BackendController
 
         $this->setTitle($section->getEditDocumentTitle($document->getTitle()));
 
-        $this->templateScripts['SECTION'] = $section;
         $this->templateScripts['DOCUMENT'] = $document;
+        $this->templateScripts['FIELDS'] = $document->getSectionFields();
 
         $this->setContent($document->getEditTemplate(), [
             'document' => $document,

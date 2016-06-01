@@ -13,9 +13,7 @@ interface FieldTypeRelationInterface
      *
      * @return Relation
      */
-    public function getDocumentRelation(
-        DocumentInterface $document, SectionInterface $relatedSection = null, FieldInterface $relatedField = null
-    );
+    public function getDocumentRelation(DocumentInterface $document, SectionInterface $relatedSection = null, FieldInterface $relatedField = null);
 
     /**
      * @param DocumentInterface $document
@@ -26,4 +24,14 @@ interface FieldTypeRelationInterface
      * @return string
      */
     public function getRelationName();
+
+    /**
+     * @return SectionInterface
+     */
+    public function getRelatedSection();
+
+    /**
+     * @return FieldInterface
+     */
+    public function getRelatedField();
 }
