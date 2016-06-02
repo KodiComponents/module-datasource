@@ -3,7 +3,6 @@
 namespace KodiCMS\Datasource\Fields\Relation;
 
 use Illuminate\Database\Eloquent\Builder;
-use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Relations\HasMany as HasManyRelation;
 use KodiCMS\Datasource\Contracts\DocumentInterface;
 use KodiCMS\Datasource\Contracts\FieldInterface;
@@ -13,28 +12,36 @@ use KodiCMS\Datasource\Repository\FieldRepository;
 
 class HasMany extends Relation
 {
+
     /**
      * @var bool
      */
     protected $hasDatabaseColumn = false;
 
     /**
+     * @var array
+     */
+    protected $selectedDocuments = [];
+
+    /**
      * @param DocumentInterface $document
-     * @param mixed             $value
+     * @param mixed $value
      *
      * @return mixed
      */
     public function onGetHeadlineValue(DocumentInterface $document, $value)
     {
-        $documents = $document->getAttribute($this->getRelationName())->map(function ($doc) {
+        $documents = $document->getAttribute($this->getRelationName())->map(function (DocumentInterface $doc) {
             return \HTML::link($doc->getEditLink(), $doc->getTitle(), ['class' => 'popup']);
         })->all();
 
-        return ! empty($documents) ? implode(', ', $documents) : null;
+        return ! empty($documents)
+            ? implode(', ', $documents)
+            : null;
     }
 
     /**
-     * @param Builder           $query
+     * @param Builder $query
      * @param DocumentInterface $document
      */
     public function querySelectColumn(Builder $query, DocumentInterface $document)
@@ -44,26 +51,59 @@ class HasMany extends Relation
 
     /**
      * @param DocumentInterface $document
-     * @param mixed             $value
+     * @param mixed $value
+     *
+     * @return mixed
      */
-    public function onDocumentFill(DocumentInterface $document, $value)
+    public function onSetDocumentAttribute(DocumentInterface $document, $value)
     {
-        if (! is_null($relatedField = $this->getRelatedField())) {
-            $section = $relatedField->getSection();
-
-            $documents = $section->newDocumentQuery()
-                ->whereIn($section->getDocumentPrimaryKey(), $value)
-                ->get();
-
-            $currentDocuments = $this->getRelatedDocumentValues($document);
-
-            $newIds = $documents->diff($currentDocuments);
-
-            if ($newIds->count() > 0) {
-                $document->{$this->getRelationName()}()->saveMany($newIds);
-            }
-        }
+        $this->selectedDocuments = $value;
     }
+
+    /**
+     * @param DocumentInterface $document
+     */
+    public function onUpdateDocumentRelations(DocumentInterface $document)
+    {
+        $currentDocuments = $this->getRelatedDocuments($document);
+        $documents = $this->getRelatedField()
+              ->getSection()
+              ->newDocumentQuery()
+              ->whereIn('id', (array) $this->selectedDocuments)
+              ->get();
+
+        $newDocuments = $documents->diff($currentDocuments);
+
+        $document->{$this->getRelationName()}()->saveMany($newDocuments);
+
+        $currentDocuments->diff($documents)->each(function (DocumentInterface $d) {
+            $d->{$this->getRelatedField()->getRelationName()}()->dissociate();
+            $d->save();
+        });
+    }
+
+    ///**
+    // * @param DocumentInterface $document
+    // * @param mixed             $value
+    // */
+    //public function onDocumentSaved(DocumentInterface $document, $value)
+    //{
+    //    if (! is_null($relatedField = $this->getRelatedField())) {
+    //        $section = $relatedField->getSection();
+    //
+    //        $documents = $section->newDocumentQuery()
+    //            ->whereIn($section->getDocumentPrimaryKey(), $value)
+    //            ->get();
+    //
+    //        $currentDocuments = $this->getRelatedDocumentValues($document);
+    //
+    //        $newIds = $documents->diff($currentDocuments);
+    //
+    //        if ($newIds->count() > 0) {
+    //            $document->{$this->getRelationName()}()->saveMany($newIds);
+    //        }
+    //    }
+    //}
 
     /**
      * @param DocumentInterface $document
@@ -72,14 +112,22 @@ class HasMany extends Relation
      */
     public function getRelatedDocumentValues(DocumentInterface $document)
     {
-        if (! is_null($relatedField = $this->getRelatedField())) {
-            $section = $relatedField->getSection();
+        $section = $this->getRelatedSection();
+        return $this->getDocumentRelation($document, $section)
+            ->pluck(
+                $section->getDocumentTitleKey(), $section->getDocumentPrimaryKey()
+            );
+    }
 
-            return $this->getDocumentRelation($document, $section)
-                ->pluck($section->getDocumentTitleKey(), $section->GetDocumentPrimaryKey());
-        }
-
-        return new Collection();
+    /**
+     * @param DocumentInterface $document
+     *
+     * @return array
+     */
+    public function getRelatedDocuments(DocumentInterface $document)
+    {
+        $section = $this->getRelatedSection();
+        return $this->getDocumentRelation($document, $section)->get();
     }
 
     /**
@@ -89,9 +137,7 @@ class HasMany extends Relation
      *
      * @return HasManyRelation
      */
-    public function getDocumentRelation(
-        DocumentInterface $document, SectionInterface $relatedSection = null, FieldInterface $relatedField = null
-    ) {
+    public function getDocumentRelation(DocumentInterface $document, SectionInterface $relatedSection = null, FieldInterface $relatedField = null) {
         $instance = $relatedSection->getEmptyDocument()->newQuery();
 
         $foreignKey = $this->getRelatedField()->getDBKey();
@@ -112,7 +158,7 @@ class HasMany extends Relation
         }
 
         $relatedField = $repository->create([
-            'type'               => 'has_one',
+            'type'               => 'belongs_to',
             'section_id'         => $this->getRelatedSectionId(),
             'is_system'          => 1,
             'key'                => $this->getDBKey().'_has_many',

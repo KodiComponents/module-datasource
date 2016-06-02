@@ -1,5 +1,5 @@
 $(function () {
-	Vue.component('relation-oto', Vue.extend({
+	Vue.component('relation-bt', Vue.extend({
 		props: {
 			relation: {
 				type: String,
@@ -10,7 +10,7 @@ $(function () {
 				required: true
 			}
 		},
-		template: '#oto-template',
+		template: '#bt-template',
 		ready: function () {
 			this.initSelect2();
 			CMS.ui.init('icon');
@@ -20,7 +20,6 @@ $(function () {
 			this.section = this.field.section;
 			this.related_section = this.field.related_section;
 			this.document_id = DOCUMENT[this.section.documentPrimaryKey];
-
 
 			this.initRecord();
 

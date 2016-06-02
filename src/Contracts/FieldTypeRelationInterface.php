@@ -21,6 +21,16 @@ interface FieldTypeRelationInterface
     public function onRelatedDocumentDeleting(DocumentInterface $document);
 
     /**
+     * @param DocumentInterface $document
+     */
+    public function onRelatedDocumentDeleted(DocumentInterface $document);
+
+    /**
+     * @param DocumentInterface $document
+     */
+    public function onUpdateDocumentRelations(DocumentInterface $document);
+
+    /**
      * @return string
      */
     public function getRelationName();

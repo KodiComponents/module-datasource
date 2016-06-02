@@ -82,7 +82,7 @@ interface SectionInterface
     public function getSystemFields();
 
     /**
-     * @return array
+     * @return FieldsCollectionInterface
      */
     public function getRelatedFields();
 

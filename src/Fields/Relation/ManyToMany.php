@@ -100,8 +100,10 @@ class ManyToMany extends Relation
     /**
      * @param DocumentInterface $document
      * @param mixed             $value
+     *
+     * @return mixed
      */
-    public function onDocumentFill(DocumentInterface $document, $value)
+    public function onSetDocumentAttribute(DocumentInterface $document, $value)
     {
         $this->selectedDocuments = $value;
     }
@@ -110,26 +112,16 @@ class ManyToMany extends Relation
      * @param DocumentInterface $document
      * @param mixed             $value
      */
-    public function onDocumentCreated(DocumentInterface $document, $value)
+    public function onDocumentSaved(DocumentInterface $document, $value)
     {
         $document->{$this->getRelationName()}()->sync((array) $this->selectedDocuments);
-        parent::onDocumentCreated($document, $value);
-    }
-
-    /**
-     * @param DocumentInterface $document
-     * @param mixed             $value
-     */
-    public function onDocumentUpdating(DocumentInterface $document, $value)
-    {
-        $document->{$this->getRelationName()}()->sync((array) $this->selectedDocuments);
-        parent::onDocumentUpdating($document, $value);
+        parent::onDocumentSaved($document, $value);
     }
 
     /**
      * @param DocumentInterface $document
      */
-    public function onDocumentDeleting(DocumentInterface $document)
+    public function onDocumentDeleted(DocumentInterface $document)
     {
         $document->{$this->getRelationName()}()->detach($document->getId());
     }
@@ -137,7 +129,7 @@ class ManyToMany extends Relation
     /**
      * @param DocumentInterface $document
      */
-    public function onRelatedDocumentDeleting(DocumentInterface $document)
+    public function onRelatedDocumentDeleted(DocumentInterface $document)
     {
         $document->{$this->getRelatedField()->getRelationName()}()->detach($document->getId());
     }
@@ -186,6 +178,20 @@ class ManyToMany extends Relation
     }
 
     /**
+     * @param FieldRepository $repository
+     */
+    public function onDeleted(FieldRepository $repository)
+    {
+        if (! is_null($relatedField = $this->getRelatedField())) {
+            $relatedField->delete();
+        }
+
+        if (! is_null($this->getRelatedTable())) {
+            Schema::dropIfExists($this->getRelatedTable());
+        }
+    }
+
+    /**
      * @param DocumentInterface $document
      *
      * @return array
@@ -203,19 +209,5 @@ class ManyToMany extends Relation
             'relatedSection'   => $relatedSection,
             'relatedField'     => $relatedField,
         ];
-    }
-
-    /**
-     * @param FieldRepository $repository
-     */
-    public function onDeleted(FieldRepository $repository)
-    {
-        if (! is_null($relatedField = $this->getRelatedField())) {
-            $relatedField->delete();
-        }
-
-        if (! is_null($this->getRelatedTable())) {
-            Schema::dropIfExists($this->getRelatedTable());
-        }
     }
 }

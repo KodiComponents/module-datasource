@@ -72,7 +72,7 @@ $(function() {
 		</tr>
 		</thead>
 		<tbody>
-		@foreach ($fields as $field)
+		@foreach ($fields->getFields() as $field)
 		<tr data-id="{{ $field->getId() }}" data-related-id="{{ $field->getRelatedFieldId() }}">
 			<td>
 				@if(!$field->isSystem())
@@ -97,7 +97,7 @@ $(function() {
 		</tr>
 		@endforeach
 		</tbody>
-		@if(count($relatedFields = $section->getRelatedFields()) > 0)
+		@if(count($relatedFields = $section->getRelatedFields()->getFields()) > 0)
 		<thead>
 		<tr>
 			<th></th>

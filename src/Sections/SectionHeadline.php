@@ -3,8 +3,10 @@
 namespace KodiCMS\Datasource\Sections;
 
 use Illuminate\Http\JsonResponse;
-use KodiCMS\Datasource\Contracts\SectionInterface;
+use Illuminate\Support\Collection;
+use KodiCMS\Datasource\Contracts\FieldInterface;
 use KodiCMS\Datasource\Contracts\SectionHeadlineInterface;
+use KodiCMS\Datasource\Contracts\SectionInterface;
 
 class SectionHeadline implements SectionHeadlineInterface
 {
@@ -14,9 +16,14 @@ class SectionHeadline implements SectionHeadlineInterface
     protected $section;
 
     /**
-     * @var array
+     * @var Collection
      */
-    protected $fields = null;
+    protected $fields;
+
+    /**
+     * @var Collection
+     */
+    protected $sectionFields;
 
     /**
      * @var int
@@ -44,31 +51,29 @@ class SectionHeadline implements SectionHeadlineInterface
     public function __construct(SectionInterface $section)
     {
         $this->section = $section;
-    }
+        $this->sectionFields = $section->getFields()->getFields();
 
-    /**
-     * @return array
-     */
-    public function getHeadlineFields()
-    {
-        if (! is_null($this->fields)) {
-            return $this->fields;
-        }
-
-        $this->fields = [];
-
-        foreach ($this->section->getFields() as $field) {
+        $this->fields = new Collection();
+        foreach ($this->sectionFields as $field) {
             if (! $field->isVisible()) {
                 continue;
             }
 
-            $this->fields[$field->getKey()] = $field->getHeadlineParameters($this);
+            $params = $field->getHeadlineParameters($this);
 
             if ($this->section->getDocumentTitleKey() == $field->getDBKey()) {
-                $this->fields[$field->getKey()]['type'] = 'link';
+                $params['type'] = 'link';
             }
-        }
 
+            $this->fields->put($field->getKey(), $params);
+        }
+    }
+
+    /**
+     * @return Collection
+     */
+    public function getHeadlineFields()
+    {
         return $this->fields;
     }
 
@@ -77,16 +82,9 @@ class SectionHeadline implements SectionHeadlineInterface
      */
     public function getActiveFieldIds()
     {
-        $fields = [];
-        foreach ($this->section->getFields() as $field) {
-            if (! $field->isVisible()) {
-                continue;
-            }
-
-            $fields[] = $field->getDBKey();
-        }
-
-        return $fields;
+        return $this->sectionFields->filter(function(FieldInterface $field) {
+            return $field->isVisible();
+        })->pluck('key');
     }
 
     /**
@@ -94,13 +92,9 @@ class SectionHeadline implements SectionHeadlineInterface
      */
     public function getSearchableFields()
     {
-        $fields = array_filter($this->section->getFields(), function ($field) {
+        return $this->sectionFields->filter(function(FieldInterface $field) {
             return $field->isVisible() and $field->isSearchable();
-        });
-
-        return array_map(function ($field) {
-            return $field->getName();
-        }, $fields);
+        })->pluck('name');
     }
 
     /**
@@ -158,7 +152,7 @@ class SectionHeadline implements SectionHeadlineInterface
     {
         return view('datasource::widgets.partials.ordering', [
             'ordering' => $this->getOrderingRules(),
-            'fields'   => $this->section->getFields(),
+            'fields'   => $this->sectionFields,
         ])->render();
     }
 }

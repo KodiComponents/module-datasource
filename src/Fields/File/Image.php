@@ -2,6 +2,7 @@
 
 namespace KodiCMS\Datasource\Fields\File;
 
+use Illuminate\Validation\Validator;
 use Intervention\Image\ImageManager;
 use KodiCMS\Datasource\Contracts\DocumentInterface;
 use KodiCMS\Datasource\Fields\File;
@@ -271,5 +272,25 @@ class Image extends File
         }
 
         $image->save($value, $this->getQuality());
+    }
+
+    /**
+     * @param DocumentInterface $document
+     * @param Validator         $validator
+     *
+     * @return array
+     */
+    public function getValidationRules(DocumentInterface $document, Validator $validator)
+    {
+        $rules = parent::getValidationRules($document, $validator);
+
+        if ($document->exists && ($key = array_search('required', $rules)) !== false) {
+            $value = $document->getAttribute($this->getDBKey());
+            if (! empty($value)) {
+                unset($rules[$key]);
+            }
+        }
+
+        return $rules;
     }
 }

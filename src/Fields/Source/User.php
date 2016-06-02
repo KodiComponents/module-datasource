@@ -165,6 +165,14 @@ class User extends Source implements FieldTypeRelationInterface
     {
     }
 
+    /**
+     * @param DocumentInterface $document
+     */
+    public function onRelatedDocumentDeleted(DocumentInterface $document)
+    {
+        
+    }
+
     /**************************************************************************
      * Events
      **************************************************************************/
@@ -180,5 +188,13 @@ class User extends Source implements FieldTypeRelationInterface
         return ! is_null($user = $document->getAttribute($this->getRelationName()))
             ? link_to_route('backend.user.edit', $user->username, $user, ['class' => 'popup'])
             : null;
+    }
+
+    /**
+     * @param DocumentInterface $document
+     */
+    public function onUpdateDocumentRelations(DocumentInterface $document)
+    {
+        // TODO: Implement onUpdateDocumentRelations() method.
     }
 }

@@ -20,6 +20,7 @@ class FieldManager extends AbstractManager
             if (! FieldType::isValid($data)) {
                 continue;
             }
+
             $this->types[$type] = new FieldType($type, $data);
         }
     }
@@ -51,6 +52,12 @@ class FieldManager extends AbstractManager
     {
         $objects = [];
         foreach ($this->getAvailableTypes() as $key => $typeObject) {
+            $interfaces = class_implements($typeObject->getClass());
+
+            if (in_array(FieldTypeOnlySystemInterface::class, $interfaces)) {
+                continue;
+            }
+
             $objects[$key] = $typeObject->getFieldObject();
         }
 

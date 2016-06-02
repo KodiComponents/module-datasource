@@ -3,15 +3,16 @@
 namespace KodiCMS\Datasource\Fields;
 
 use DatasourceManager;
+use KodiCMS\Datasource\Contracts\DocumentInterface;
 use KodiCMS\Datasource\Contracts\FieldInterface;
+use KodiCMS\Datasource\Contracts\FieldTypeRelationInterface;
 use KodiCMS\Datasource\Contracts\SectionInterface;
 use KodiCMS\Datasource\Model\Field;
-use KodiCMS\Datasource\Contracts\DocumentInterface;
 use KodiCMS\Widgets\Contracts\Widget as WidgetInterface;
-use KodiCMS\Datasource\Contracts\FieldTypeRelationInterface;
 
 abstract class Relation extends Field implements FieldTypeRelationInterface
 {
+
     /**
      * The relations to eager load on every query.
      *
@@ -95,21 +96,48 @@ abstract class Relation extends Field implements FieldTypeRelationInterface
 
         return array_merge(parent::fetchDocumentTemplateValues($document), [
             'relatedDocument' => $this->getDocumentRelation($document, $relatedSection)->first(),
-            'relatedSection'  => $relatedSection,
-            'relatedField'    => $this->getRelatedField(),
+            'relatedSection' => $relatedSection,
+            'relatedField' => $this->getRelatedField(),
         ]);
     }
 
     /**
      * @param DocumentInterface $document
-     * @param WidgetInterface   $widget
-     * @param mixed             $value
+     *
+     * @return array
+     */
+    public function getRelatedDocumentValues(DocumentInterface $document)
+    {
+        $section = $this->getRelatedSection();
+        return $this->getDocumentRelation($document, $section)
+                    ->pluck(
+                        $section->getDocumentTitleKey(), $section->getDocumentPrimaryKey()
+                    );
+    }
+
+    /**
+     * @param DocumentInterface $document
+     *
+     * @return array
+     */
+    public function getRelatedDocuments(DocumentInterface $document)
+    {
+        $section = $this->getRelatedSection();
+        return $this->getDocumentRelation($document, $section)->get();
+    }
+
+    /**
+     * @param DocumentInterface $document
+     * @param WidgetInterface $widget
+     * @param mixed $value
      *
      * @return mixed
      */
     public function onGetWidgetValue(DocumentInterface $document, WidgetInterface $widget, $value)
     {
-        return ! is_null($related = $document->getAttribute($this->getRelationName())) ? $related->toArray() : $value;
+        return ! is_null($related = $document->getAttribute($this->getRelationName()))
+            ? $related->toArray()
+            : $value;
     }
 
     /**
@@ -117,5 +145,20 @@ abstract class Relation extends Field implements FieldTypeRelationInterface
      */
     public function onRelatedDocumentDeleting(DocumentInterface $document)
     {
+    }
+
+    /**
+     * @param DocumentInterface $document
+     */
+    public function onRelatedDocumentDeleted(DocumentInterface $document)
+    {
+    }
+
+    /**
+     * @param DocumentInterface $document
+     */
+    public function onUpdateDocumentRelations(DocumentInterface $document)
+    {
+        
     }
 }

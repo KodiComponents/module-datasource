@@ -2,9 +2,10 @@
 
 namespace KodiCMS\Datasource\Contracts;
 
+use Illuminate\Contracts\Support\Arrayable;
 use Illuminate\Support\Collection;
 
-interface FieldsCollectionInterface
+interface FieldsCollectionInterface extends Arrayable, \ArrayAccess
 {
     /**
      * @param int $id
@@ -14,18 +15,18 @@ interface FieldsCollectionInterface
     public function getById($id);
 
     /**
+     * @param string $type
+     *
+     * @return FieldInterface[]|Collection
+     */
+    public function getByType($type);
+
+    /**
      * @param string $key
      *
      * @return FieldInterface|null
      */
     public function getByKey($key);
-
-    /**
-     * @param string $type
-     *
-     * @return Collection
-     */
-    public function getByType($type);
 
     /**
      * @return array
@@ -38,24 +39,38 @@ interface FieldsCollectionInterface
     public function getKeys();
 
     /**
-     * @param array| string $keys
-     *
-     * @return array
-     */
-    public function getOnly($keys);
-
-    /**
-     * @return Collection
-     */
-    public function getFields();
-
-    /**
      * @return array
      */
     public function getNames();
 
     /**
-     * @return array
+     * @return FieldInterface[]|Collection
+     */
+    public function getFields();
+
+    /**
+     * @return \Illuminate\Database\Eloquent\Collection|FieldGroupInterface
+     */
+    public function getGroupedFields();
+
+    /**
+     * @param array| string $keys
+     *
+     * @return FieldInterface[]|Collection
+     */
+    public function getOnly($keys);
+
+    /**
+     * @return FieldsCollectionInterface
      */
     public function getEditable();
+
+    /**
+     * @param FieldInterface $field
+     *
+     * @return $this
+     */
+    public function add(FieldInterface $field);
+
+
 }

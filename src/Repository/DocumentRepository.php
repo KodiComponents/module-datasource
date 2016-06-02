@@ -6,6 +6,8 @@ use Illuminate\Http\Request;
 use Illuminate\Validation\Validator;
 use KodiCMS\CMS\Repository\BaseRepository;
 use KodiCMS\Datasource\Contracts\DocumentInterface;
+use KodiCMS\Datasource\Contracts\FieldInterface;
+use KodiCMS\Datasource\Contracts\FieldTypeRelationInterface;
 use KodiCMS\Datasource\Contracts\SectionInterface;
 use KodiCMS\Datasource\Model\Document;
 
@@ -95,6 +97,12 @@ class DocumentRepository extends BaseRepository
 
         $document->fill(array_only($data, $document->getEditableFields()->getKeys()))->save();
 
+        $document->getFields()->each(function(FieldInterface $field) use($document) {
+            if($field instanceof FieldTypeRelationInterface) {
+                $field->onUpdateDocumentRelations($document);
+            }
+        });
+
         return $document;
     }
 
@@ -108,7 +116,14 @@ class DocumentRepository extends BaseRepository
     public function updateBySectionId($sectionId, $documentId, array $data)
     {
         $document = $this->getDocumentById($sectionId, $documentId);
-        $document->update(array_only($data, $document->getEditableFields()->getKeys()));
+
+        $document->update($data);
+
+        $document->getFields()->each(function(FieldInterface $field) use($document) {
+            if($field instanceof FieldTypeRelationInterface) {
+                $field->onUpdateDocumentRelations($document);
+            }
+        });
 
         return $document;
     }

@@ -68,12 +68,15 @@ class FieldGroup extends DatasourceModel implements FieldGroupInterface
      */
     public function getFields()
     {
-        return $this->fields;
+        return $this->fields->getFields();
     }
 
+    /**
+     * @param FieldInterface $field
+     */
     public function addField(FieldInterface $field)
     {
-        $this->getFields()->add($field);
+        $this->fields->add($field);
     }
 
     /**

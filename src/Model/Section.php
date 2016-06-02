@@ -221,6 +221,13 @@ class Section extends DatasourceModel implements SectionInterface
 
         return $this->sectionFields;
     }
+    /**
+     * @return FieldsCollectionInterface
+     */
+    public function getEditableFields()
+    {
+        return new FieldsCollection($this->getFields()->getEditable(), $this);
+    }
 
     /**
      * @return array

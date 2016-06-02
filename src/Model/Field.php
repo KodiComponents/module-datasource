@@ -9,7 +9,6 @@ use KodiCMS\Datasource\Filter\Type;
 use Illuminate\Validation\Validator;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Schema\Blueprint;
-use Illuminate\Contracts\Support\Arrayable;
 use KodiCMS\Datasource\Observers\FieldObserver;
 use KodiCMS\Datasource\Contracts\FieldInterface;
 use KodiCMS\Datasource\Exceptions\FieldException;
@@ -511,13 +510,24 @@ class Field extends DatasourceModel implements FieldInterface
 
     /**
      * @param DocumentInterface $document
+     * @param mixed $value
+     *
+     * @return void
+     */
+    public function onDocumentFill(DocumentInterface $document, $value)
+    {
+        $this->onSetDocumentAttribute($document, $value);
+    }
+
+    /**
+     * @param DocumentInterface $document
      * @param mixed             $value
      *
      * @return mixed
      */
     public function onSetDocumentAttribute(DocumentInterface $document, $value)
     {
-        return $value;
+        $document->setAttribute($this->getDBKey(), $value);
     }
 
     /**
@@ -567,7 +577,7 @@ class Field extends DatasourceModel implements FieldInterface
 
     /**
      * @param DocumentInterface $document
-     * @param                   $value
+     * @param mixed             $value
      */
     public function onDocumentCreating(DocumentInterface $document, $value)
     {
@@ -575,7 +585,7 @@ class Field extends DatasourceModel implements FieldInterface
 
     /**
      * @param DocumentInterface $document
-     * @param                   $value
+     * @param mixed             $value
      */
     public function onDocumentCreated(DocumentInterface $document, $value)
     {
@@ -583,7 +593,7 @@ class Field extends DatasourceModel implements FieldInterface
 
     /**
      * @param DocumentInterface $document
-     * @param                   $value
+     * @param mixed             $value
      */
     public function onDocumentUpdating(DocumentInterface $document, $value)
     {
@@ -593,7 +603,23 @@ class Field extends DatasourceModel implements FieldInterface
      * @param DocumentInterface $document
      * @param mixed             $value
      */
-    public function onDocumentFill(DocumentInterface $document, $value)
+    public function onDocumentUpdated(DocumentInterface $document, $value)
+    {
+    }
+
+    /**
+     * @param DocumentInterface $document
+     * @param mixed $value
+     */
+    public function onDocumentSaving(DocumentInterface $document, $value)
+    {
+    }
+
+    /**
+     * @param DocumentInterface $document
+     * @param mixed $value
+     */
+    public function onDocumentSaved(DocumentInterface $document, $value)
     {
     }
 
@@ -601,6 +627,13 @@ class Field extends DatasourceModel implements FieldInterface
      * @param DocumentInterface $document
      */
     public function onDocumentDeleting(DocumentInterface $document)
+    {
+    }
+
+    /**
+     * @param DocumentInterface $document
+     */
+    public function onDocumentDeleted(DocumentInterface $document)
     {
     }
 

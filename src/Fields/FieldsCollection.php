@@ -2,7 +2,6 @@
 
 namespace KodiCMS\Datasource\Fields;
 
-use Illuminate\Contracts\Support\Arrayable;
 use Illuminate\Support\Collection;
 use KodiCMS\Datasource\Contracts\FieldGroupInterface;
 use KodiCMS\Datasource\Contracts\FieldInterface;
@@ -11,22 +10,13 @@ use KodiCMS\Datasource\Contracts\SectionInterface;
 use KodiCMS\Datasource\FieldGroups\DefaultGroup;
 use KodiCMS\Datasource\Model\FieldGroup;
 
-class FieldsCollection implements Arrayable, FieldsCollectionInterface, \Countable, \ArrayAccess, \IteratorAggregate
+class FieldsCollection implements FieldsCollectionInterface
 {
-    /**
-     * @var array
-     */
-    protected $fields = [];
 
     /**
-     * @var array
+     * @var FieldInterface[]|Collection
      */
-    protected $fieldIds = [];
-
-    /**
-     * @var array
-     */
-    protected $fieldNames = [];
+    protected $fields;
 
     /**
      * @var SectionInterface
@@ -38,6 +28,8 @@ class FieldsCollection implements Arrayable, FieldsCollectionInterface, \Countab
      */
     public function __construct($fields)
     {
+        $this->fields = new Collection();
+
         foreach ($fields as $field) {
             if ($field instanceof FieldInterface) {
                 $this->add($field);
@@ -56,23 +48,25 @@ class FieldsCollection implements Arrayable, FieldsCollectionInterface, \Countab
      */
     public function getById($id)
     {
-        return array_get($this->fieldIds, $id);
+        return $this->fields->filter(function (FieldInterface $field) use ($id) {
+            return $field->getId() == $id;
+        })->first();
     }
 
     /**
      * @param string $type
      *
-     * @return Collection
+     * @return FieldInterface[]|Collection
      */
     public function getByType($type)
     {
-        return new Collection(array_filter($this->getFields(), function ($field) use ($type) {
+        return $this->fields->filter(function (FieldInterface $field) use ($type) {
             if (is_array($type)) {
                 return in_array($field->type, $type);
             } else {
                 return $field->type == $type;
             }
-        }));
+        });
     }
 
     /**
@@ -82,7 +76,7 @@ class FieldsCollection implements Arrayable, FieldsCollectionInterface, \Countab
      */
     public function getByKey($key)
     {
-        return array_get($this->fields, $key);
+        return $this->fields->get($key);
     }
 
     /**
@@ -90,7 +84,9 @@ class FieldsCollection implements Arrayable, FieldsCollectionInterface, \Countab
      */
     public function getIds()
     {
-        return array_keys($this->fieldIds);
+        return $this->fields->keyBy(function (FieldInterface $field) {
+            return $field->getId();
+        })->keys()->all();
     }
 
     /**
@@ -98,7 +94,7 @@ class FieldsCollection implements Arrayable, FieldsCollectionInterface, \Countab
      */
     public function getKeys()
     {
-        return array_keys($this->getFields());
+        return $this->fields->keys()->all();
     }
 
     /**
@@ -106,11 +102,11 @@ class FieldsCollection implements Arrayable, FieldsCollectionInterface, \Countab
      */
     public function getNames()
     {
-        return $this->fieldNames;
+        return $this->fields->pluck('name', 'key')->all();
     }
 
     /**
-     * @return array
+     * @return FieldInterface[]|Collection
      */
     public function getFields()
     {
@@ -118,7 +114,7 @@ class FieldsCollection implements Arrayable, FieldsCollectionInterface, \Countab
     }
 
     /**
-     * @return array
+     * @return \Illuminate\Database\Eloquent\Collection|FieldGroupInterface
      */
     public function getGroupedFields()
     {
@@ -128,13 +124,13 @@ class FieldsCollection implements Arrayable, FieldsCollectionInterface, \Countab
 
         $defaultGroup = (new DefaultGroup())->setFields([]);
 
-        foreach ($this->getFields() as $field) {
+        $this->fields->each(function (FieldInterface $field) use ($groups, $defaultGroup) {
             if ($groups->offsetExists($field->group_id) and ! is_null($group = $groups->offsetGet($field->group_id))) {
                 $group->addField($field);
             } else {
                 $defaultGroup->addField($field);
             }
-        }
+        });
 
         return $groups->add($defaultGroup);
     }
@@ -142,7 +138,7 @@ class FieldsCollection implements Arrayable, FieldsCollectionInterface, \Countab
     /**
      * @param array| string $keys
      *
-     * @return array
+     * @return FieldInterface[]|Collection
      */
     public function getOnly($keys)
     {
@@ -150,17 +146,17 @@ class FieldsCollection implements Arrayable, FieldsCollectionInterface, \Countab
             $keys = func_get_args();
         }
 
-        return array_only($this->fields, $keys);
+        return $this->fields->only($keys);
     }
 
     /**
-     * @return array
+     * @return FieldsCollectionInterface
      */
     public function getEditable()
     {
-        return new static(array_filter($this->getFields(), function ($field) {
+        return $this->fields->filter(function (FieldInterface $field) {
             return $field->isEditable();
-        }), $this->section);
+        });
     }
 
     /**
@@ -174,9 +170,7 @@ class FieldsCollection implements Arrayable, FieldsCollectionInterface, \Countab
             $field->initFilterType();
         }
 
-        $this->fields[$field->getDBKey()] = $field;
-        $this->fieldIds[$field->getId()] = $field;
-        $this->fieldNames[$field->getDBKey()] = $field->getName();
+        $this->fields->put($field->getDBKey(), $field);
 
         return $this;
     }
@@ -188,125 +182,76 @@ class FieldsCollection implements Arrayable, FieldsCollectionInterface, \Countab
      */
     public function toArray()
     {
-        return $this->getFields();
+        return $this->fields->toArray();
     }
 
     /**
-     * @return  int
-     */
-    public function count()
-    {
-        return count($this->getFields());
-    }
-
-    public function rewind()
-    {
-        reset($this->fields);
-    }
-
-    public function current()
-    {
-        return current($this->fields);
-    }
-
-    /**
-     * @return int
-     */
-    public function key()
-    {
-        return key($this->fields);
-    }
-
-    /**
-     * @return Item
-     */
-    public function next()
-    {
-        return next($this->fields);
-    }
-
-    /**
-     * @return bool
-     */
-    public function valid()
-    {
-        return (! is_null($key = key($this->fields)) and $key !== false);
-    }
-
-    /**
-     * @param string $key
-     *
-     * @return bool
-     */
-    public function __isset($key)
-    {
-        return isset($this->fields[$key]);
-    }
-
-    /**
-     * @param string $key
-     *
-     * @return FieldInterface|null
-     */
-    public function __get($key)
-    {
-        return $this->getByKey($key);
-    }
-
-    /**
-     * (PHP 5 &gt;= 5.0.0)<br/>
-     * Whether a offset exists.
+     * Whether a offset exists
      * @link http://php.net/manual/en/arrayaccess.offsetexists.php
      *
-     * @param mixed $key <p>
-     *                   An offset to check for.
-     *                   </p>
+     * @param mixed $offset <p>
+     * An offset to check for.
+     * </p>
      *
-     * @return bool true on success or false on failure.
+     * @return boolean true on success or false on failure.
      * </p>
      * <p>
      * The return value will be casted to boolean if non-boolean was returned.
+     * @since 5.0.0
      */
-    public function offsetExists($key)
+    public function offsetExists($offset)
     {
-        return isset($this->fields[$key]);
+        return $this->fields->offsetExists($offset);
     }
 
     /**
-     * @param string $key
+     * Offset to retrieve
+     * @link http://php.net/manual/en/arrayaccess.offsetget.php
      *
-     * @return FieldInterface|null
+     * @param mixed $offset <p>
+     * The offset to retrieve.
+     * </p>
+     *
+     * @return mixed Can return all value types.
+     * @since 5.0.0
      */
-    public function offsetGet($key)
+    public function offsetGet($offset)
     {
-        return $this->getByKey($key);
+        return $this->fields->offsetGet($offset);
     }
 
     /**
-     * @param string $key
+     * Offset to set
+     * @link http://php.net/manual/en/arrayaccess.offsetset.php
+     *
+     * @param mixed $offset <p>
+     * The offset to assign the value to.
+     * </p>
+     * @param mixed $value <p>
+     * The value to set.
+     * </p>
      *
      * @return void
+     * @since 5.0.0
      */
-    public function offsetSet($key, $value)
+    public function offsetSet($offset, $value)
     {
         // TODO: Implement offsetSet() method.
     }
 
     /**
-     * @param string $key
+     * Offset to unset
+     * @link http://php.net/manual/en/arrayaccess.offsetunset.php
+     *
+     * @param mixed $offset <p>
+     * The offset to unset.
+     * </p>
      *
      * @return void
+     * @since 5.0.0
      */
-    public function offsetUnset($key)
+    public function offsetUnset($offset)
     {
-        // TODO: Implement offsetUnset() method.
-    }
-
-    /**
-     * @return \ArrayIterator
-     */
-    public function getIterator()
-    {
-        return new \ArrayIterator($this->fields);
+        $this->fields->offsetUnset($offset);
     }
 }

@@ -3,15 +3,19 @@
 namespace KodiCMS\Datasource\Model;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Collection;
 use Illuminate\Validation\Validator;
 use KodiCMS\CMS\Http\Controllers\System\TemplateController;
 use KodiCMS\Datasource\Contracts\DocumentInterface;
+use KodiCMS\Datasource\Contracts\FieldInterface;
+use KodiCMS\Datasource\Contracts\FieldsCollectionInterface;
 use KodiCMS\Datasource\Contracts\FieldTypeDateInterface;
 use KodiCMS\Datasource\Contracts\FieldTypeOnlySystemInterface;
 use KodiCMS\Datasource\Contracts\FieldTypeRelationInterface;
 use KodiCMS\Datasource\Contracts\SectionHeadlineInterface;
 use KodiCMS\Datasource\Contracts\SectionInterface;
-use KodiCMS\Datasource\Fields\FieldsCollection;
+use KodiCMS\Datasource\Fields\File;
+use KodiCMS\Datasource\Fields\Primitive\Primary;
 use KodiCMS\Datasource\Observers\DocumentObserver;
 use KodiCMS\Support\Traits\Tentacle;
 use KodiCMS\Widgets\Contracts\Widget as WidgetInterface;
@@ -85,13 +89,18 @@ class Document extends Model implements DocumentInterface
             $this->table = $this->section->getSectionTableName();
 
             $this->primaryKey = $section->getDocumentPrimaryKey();
-            if (! is_null($this->primaryKey)) {
-                $this->incrementing = true;
+
+            if (! is_null($this->primaryKey) && $this->hasField($this->primaryKey)) {
+                $field = $this->getFields()->get($this->primaryKey);
+                if ($field instanceof Primary) {
+                    $this->incrementing = true;
+                }
             }
 
-            foreach ($this->getSectionFields() as $field) {
+            foreach ($this->getFields() as $field) {
                 if ($field instanceof FieldTypeDateInterface) {
                     $this->dates[] = $field->getDBKey();
+                    $this->casts[$field->getDBKey()] = 'date';
                 }
 
                 // TODO: подумать как это оптимизировать
@@ -110,7 +119,7 @@ class Document extends Model implements DocumentInterface
                 }
             }
 
-            if ($this->getSectionFields()->offsetExists(static::CREATED_AT) and $this->getSectionFields()->offsetExists(static::UPDATED_AT)) {
+            if ($this->hasField(static::CREATED_AT) and $this->hasField(static::UPDATED_AT)) {
                 $this->timestamps = true;
             }
         }
@@ -161,36 +170,16 @@ class Document extends Model implements DocumentInterface
      */
     public function fill(array $attributes)
     {
+        if ($this->getSection()) {
+            $this->getEditableFields()->getFields()->each(function (FieldInterface $field) use (& $attributes) {
+                $field->onDocumentFill($this, array_get($attributes, $field->getDBKey()));
+                unset($attributes[$field->getDBKey()]);
+            });
+        }
+
         parent::fill($attributes);
 
-        foreach ($attributes as $key => $value) {
-            if (! is_null($field = $this->getSectionFields()->getByKey($key))) {
-                $field->onDocumentFill($this, $value);
-            }
-        }
-
         return $this;
-    }
-
-    /**
-     * Set a given attribute on the model.
-     *
-     * @param  string $key
-     * @param  mixed  $value
-     *
-     * @return void
-     */
-    public function setAttribute($key, $value)
-    {
-        if (! is_null($field = $this->getSectionFields()->getByKey($key))) {
-            $value = $field->onSetDocumentAttribute($this, $value);
-
-            if (method_exists($field, 'setDocumentAttribute')) {
-                return $field->setDocumentAttribute($this, $value);
-            }
-        }
-
-        parent::setAttribute($key, $value);
     }
 
     /**
@@ -212,7 +201,7 @@ class Document extends Model implements DocumentInterface
      */
     public function hasField($key)
     {
-        return $this->getSectionFields()->offsetExists($key);
+        return $this->getFields()->has($key);
     }
 
     /**
@@ -226,7 +215,7 @@ class Document extends Model implements DocumentInterface
     protected function mutateAttribute($key, $value)
     {
         if ($this->hasField($key)) {
-            return $this->getSectionFields()->getByKey($key)->onGetDocumentValue($this, $value);
+            return $this->getFields()->get($key)->onGetDocumentValue($this, $value);
         }
 
         return parent::mutateAttribute($key, $value);
@@ -243,7 +232,7 @@ class Document extends Model implements DocumentInterface
     {
         $value = parent::getAttributeValue($key);
 
-        if (! is_null($field = $this->getSectionFields()->getByKey($key))) {
+        if (! is_null($field = $this->getFieldsCollection()->getByKey($key))) {
             $value = $field->onGetFormValue($this, $value);
         }
 
@@ -261,7 +250,7 @@ class Document extends Model implements DocumentInterface
     {
         $value = parent::getAttributeValue($key);
 
-        if (! is_null($field = $this->getSectionFields()->getByKey($key))) {
+        if (! is_null($field = $this->getFieldsCollection()->getByKey($key))) {
             $value = $field->onGetHeadlineValue($this, $value);
         }
 
@@ -304,7 +293,7 @@ class Document extends Model implements DocumentInterface
     public function getWidgetValue($key, WidgetInterface $widget)
     {
         $value = parent::getAttributeValue($key);
-        if (! is_null($field = $this->getSectionFields()->getByKey($key))) {
+        if (! is_null($field = $this->getFieldsCollection()->getByKey($key))) {
             $value = $field->onGetWidgetValue($this, $widget, $value);
         }
 
@@ -312,11 +301,19 @@ class Document extends Model implements DocumentInterface
     }
 
     /**
-     * @return FieldsCollection
+     * @return FieldsCollectionInterface
      */
-    public function getSectionFields()
+    public function getFieldsCollection()
     {
         return $this->getSection()->getFields();
+    }
+
+    /**
+     * @return Collection|FieldInterface[]
+     */
+    public function getFields()
+    {
+        return $this->getFieldsCollection()->getFields();
     }
 
     /**
@@ -324,15 +321,15 @@ class Document extends Model implements DocumentInterface
      */
     public function getFieldsNames()
     {
-        return $this->getSectionFields()->getNames();
+        return $this->getFieldsCollection()->getNames();
     }
 
     /**
-     * @return array
+     * @return FieldsCollectionInterface
      */
     public function getEditableFields()
     {
-        return $this->getSectionFields()->getEditable();
+        return $this->getSection()->getEditableFields();
     }
 
     /**
@@ -380,9 +377,9 @@ class Document extends Model implements DocumentInterface
      */
     public function onControllerLoad(TemplateController $controller)
     {
-        foreach ($this->getSectionFields() as $field) {
+        $this->getFields()->each(function(FieldInterface $field) use($controller) {
             $field->onControllerLoad($this, $controller);
-        }
+        });
     }
 
     /**
@@ -394,7 +391,7 @@ class Document extends Model implements DocumentInterface
     {
         $rules = [];
 
-        foreach ($this->getEditableFields() as $field) {
+        foreach ($this->getEditableFields()->getFields() as $field) {
             $rules[$field->getDBKey()] = $field->getValidationRules($this, $validator);
         }
 
@@ -472,10 +469,10 @@ class Document extends Model implements DocumentInterface
                     continue;
                 }
 
-                $selectFields[] = $this->getSectionFields()->getByKey($fieldKey);
+                $selectFields[] = $this->getFieldsCollection()->getByKey($fieldKey);
             }
         } elseif ($fields === true) {
-            $selectFields = $this->getSectionFields();
+            $selectFields = $this->getFieldsCollection();
         } elseif ($fields === false) {
             $query->selectRaw('COUNT(*) as total_docs');
         }
@@ -513,7 +510,7 @@ class Document extends Model implements DocumentInterface
             $fieldKey = key($rule);
             $dir = $rule[key($rule)];
 
-            if (is_null($field = $this->getSectionFields()->getByKey($fieldKey))) {
+            if (is_null($field = $this->getFieldsCollection()->getByKey($fieldKey))) {
                 continue;
             }
 

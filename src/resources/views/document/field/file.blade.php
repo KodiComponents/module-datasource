@@ -40,12 +40,16 @@
 					@else
 					{!! link_to($value, trans('datasource::fields.file.view_file'), ['data-icon' => 'file', 'target' => '_blank', 'class' => ['btn btn-default'], 'id' => 'uploaded-' . $key,]) !!}
 					@endif
+
+					@if(!$field->isRequired())
 					&nbsp;&nbsp;&nbsp;
 					<div class="checkbox-inline">
 						<label>
 							{!! Form::checkbox($key . '_remove', 1, false, ['class' => 'remove-file-checkbox']) !!} @lang('datasource::fields.file.remove_file')
 						</label>
 					</div>
+					@endif
+
 				</div>
 				@endif
 

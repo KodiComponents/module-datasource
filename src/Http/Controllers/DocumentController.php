@@ -40,7 +40,7 @@ class DocumentController extends BackendController
         $this->setTitle($section->getCreateDocumentTitle());
 
         $this->templateScripts['DOCUMENT'] = $document;
-        $this->templateScripts['FIELDS'] = $document->getSectionFields();
+        $this->templateScripts['FIELDS'] = $document->getFields();
         $document->onControllerLoad($this);
 
         $this->setContent($document->getCreateTemplate(), [
@@ -87,7 +87,7 @@ class DocumentController extends BackendController
         $this->setTitle($section->getEditDocumentTitle($document->getTitle()));
 
         $this->templateScripts['DOCUMENT'] = $document;
-        $this->templateScripts['FIELDS'] = $document->getSectionFields();
+        $this->templateScripts['FIELDS'] = $document->getFields();
 
         $this->setContent($document->getEditTemplate(), [
             'document' => $document,

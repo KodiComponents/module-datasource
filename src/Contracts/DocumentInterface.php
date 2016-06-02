@@ -2,12 +2,14 @@
 
 namespace KodiCMS\Datasource\Contracts;
 
+use Illuminate\Support\Collection;
 use Illuminate\Validation\Validator;
-use KodiCMS\Widgets\Contracts\Widget as WidgetInterface;
 use KodiCMS\CMS\Http\Controllers\System\TemplateController;
+use KodiCMS\Widgets\Contracts\Widget as WidgetInterface;
 
 interface DocumentInterface
 {
+
     /**
      * @return string|int
      */
@@ -45,7 +47,7 @@ interface DocumentInterface
     /**
      * Get a plain attribute (not a relationship).
      *
-     * @param  string          $key
+     * @param  string $key
      * @param  WidgetInterface $widget
      *
      * @return mixed
@@ -77,12 +79,17 @@ interface DocumentInterface
     public function getFieldsNames();
 
     /**
-     * @return array
+     * @return FieldsCollectionInterface
      */
-    public function getSectionFields();
+    public function getFieldsCollection();
 
     /**
-     * @return array
+     * @return Collection|FieldInterface[]
+     */
+    public function getFields();
+
+    /**
+     * @return FieldsCollectionInterface
      */
     public function getEditableFields();
 
@@ -109,8 +116,8 @@ interface DocumentInterface
     public function getValidationRules(Validator $validator);
 
     /**
-     * @param int|string      $id
-     * @param array|null          $fields
+     * @param int|string $id
+     * @param array|null $fields
      * @param string|int|null $primaryKeyField
      *
      * @return DocumentInterface|null
@@ -119,8 +126,8 @@ interface DocumentInterface
 
     /**
      * @param bool|array|null $fields
-     * @param array           $orderRules
-     * @param array           $filterRules
+     * @param array $orderRules
+     * @param array $filterRules
      *
      * @return Collection
      */

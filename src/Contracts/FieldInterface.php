@@ -2,15 +2,16 @@
 
 namespace KodiCMS\Datasource\Contracts;
 
-use KodiCMS\Datasource\FieldType;
-use Illuminate\Validation\Validator;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Schema\Blueprint;
-use KodiCMS\Widgets\Contracts\Widget as WidgetInterface;
+use Illuminate\Validation\Validator;
 use KodiCMS\CMS\Http\Controllers\System\TemplateController;
+use KodiCMS\Datasource\FieldType;
+use KodiCMS\Widgets\Contracts\Widget as WidgetInterface;
 
 interface FieldInterface
 {
+
     /**
      * @return int
      */
@@ -30,7 +31,6 @@ interface FieldInterface
      * @return FieldType
      */
     public function getType();
-
 
     /**
      * @return string
@@ -74,7 +74,7 @@ interface FieldInterface
 
     /**
      * @param DocumentInterface $document
-     * @param Validator         $validator
+     * @param Validator $validator
      *
      * @return array
      */
@@ -163,13 +163,13 @@ interface FieldInterface
 
     /**
      * @param DocumentInterface $document
-     * @param mixed             $value
+     * @param mixed $value
      */
     public function onDocumentFill(DocumentInterface $document, $value);
 
     /**
      * @param DocumentInterface $document
-     * @param mixed             $value
+     * @param mixed $value
      *
      * @return mixed
      */
@@ -177,7 +177,7 @@ interface FieldInterface
 
     /**
      * @param DocumentInterface $document
-     * @param mixed             $value
+     * @param mixed $value
      *
      * @return mixed
      */
@@ -185,7 +185,7 @@ interface FieldInterface
 
     /**
      * @param DocumentInterface $document
-     * @param mixed             $value
+     * @param mixed $value
      *
      * @return mixed
      */
@@ -193,8 +193,8 @@ interface FieldInterface
 
     /**
      * @param DocumentInterface $document
-     * @param WidgetInterface   $widget
-     * @param mixed             $value
+     * @param WidgetInterface $widget
+     * @param mixed $value
      *
      * @return mixed
      */
@@ -202,7 +202,7 @@ interface FieldInterface
 
     /**
      * @param DocumentInterface $document
-     * @param mixed             $value
+     * @param mixed $value
      *
      * @return mixed
      */
@@ -210,21 +210,39 @@ interface FieldInterface
 
     /**
      * @param DocumentInterface $document
-     * @param                   $value
+     * @param mixed $value
      */
     public function onDocumentCreating(DocumentInterface $document, $value);
 
     /**
      * @param DocumentInterface $document
-     * @param                   $value
+     * @param mixed $value
      */
     public function onDocumentCreated(DocumentInterface $document, $value);
 
     /**
      * @param DocumentInterface $document
-     * @param                   $value
+     * @param mixed $value
      */
     public function onDocumentUpdating(DocumentInterface $document, $value);
+
+    /**
+     * @param DocumentInterface $document
+     * @param mixed $value
+     */
+    public function onDocumentUpdated(DocumentInterface $document, $value);
+
+    /**
+     * @param DocumentInterface $document
+     * @param mixed $value
+     */
+    public function onDocumentSaving(DocumentInterface $document, $value);
+
+    /**
+     * @param DocumentInterface $document
+     * @param mixed $value
+     */
+    public function onDocumentSaved(DocumentInterface $document, $value);
 
     /**
      * @param DocumentInterface $document
@@ -232,7 +250,12 @@ interface FieldInterface
     public function onDocumentDeleting(DocumentInterface $document);
 
     /**
-     * @param DocumentInterface  $document
+     * @param DocumentInterface $document
+     */
+    public function onDocumentDeleted(DocumentInterface $document);
+
+    /**
+     * @param DocumentInterface $document
      * @param TemplateController $controller
      */
     public function onControllerLoad(DocumentInterface $document, TemplateController $controller);
@@ -248,7 +271,7 @@ interface FieldInterface
 
     /**
      * @param Builder $query
-     * @param string  $dir
+     * @param string $dir
      */
     public function queryOrderBy(Builder $query, $dir = 'asc');
 
@@ -268,7 +291,7 @@ interface FieldInterface
 
     /**
      * @param DocumentInterface $document
-     * @param string|null       $template
+     * @param string|null $template
      *
      * @return string
      */
