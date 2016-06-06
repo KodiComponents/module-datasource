@@ -161,7 +161,7 @@ class HasMany extends Relation
             'type'               => 'belongs_to',
             'section_id'         => $this->getRelatedSectionId(),
             'is_system'          => 1,
-            'key'                => $this->getDBKey().'_has_many',
+            'key'                => $this->getRelatedDBKey(),
             'name'               => $this->getSection()->getName(),
             'related_section_id' => $this->getSection()->getId(),
             'related_field_id'   => $this->getId(),
@@ -170,6 +170,14 @@ class HasMany extends Relation
         if (! is_null($relatedField)) {
             $this->update(['related_field_id' => $relatedField->getId()]);
         }
+    }
+
+    /**
+     * @return string
+     */
+    public function getRelatedDBKey()
+    {
+        return $this->getDBKey().'_has_many';
     }
 
     /**

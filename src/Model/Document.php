@@ -521,8 +521,7 @@ class Document extends Model implements DocumentInterface
 
     public function loadRelations()
     {
-        foreach ($this->relationsFields as $key)
-        {
+        foreach ($this->relationsFields as $key) {
             $this->getRelationValue($key);
         }
     }

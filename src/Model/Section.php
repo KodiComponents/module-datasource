@@ -250,8 +250,18 @@ class Section extends DatasourceModel implements SectionInterface
     protected function initializeFields()
     {
         if (! $this->initializedFields) {
-            $this->sectionFields = new FieldsCollection($this->fields()->with('relatedField')->get(), $this);
-            $this->relatedFields = new FieldsCollection($this->relatedFields()->with('relatedField')->get(), $this);
+            $fields = Field::where(function($q) {
+                $q->orWhere('section_id', $this->id)
+                    ->orWhere('related_section_id', $this->id);
+            })->with('relatedSection')->get();
+
+            $this->sectionFields = new FieldsCollection($fields->filter(function($field) {
+                return $field->section_id == $this->id;
+            }), $this);
+            
+            $this->relatedFields = new FieldsCollection($fields->filter(function($field) {
+                return $field->related_section_id == $this->id;
+            }), $this);
 
             $this->initializedFields = true;
         }

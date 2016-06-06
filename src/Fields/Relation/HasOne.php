@@ -150,6 +150,14 @@ class HasOne extends Relation
     }
 
     /**
+     * @return string
+     */
+    public function getRelatedDBKey()
+    {
+        return $this->getDBKey().'_has_one';
+    }
+
+    /**
      * @param FieldRepository $repository
      */
     public function onDeleted(FieldRepository $repository)

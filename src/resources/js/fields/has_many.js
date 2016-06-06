@@ -65,9 +65,6 @@ $(function () {
                                 results: data.content
                             };
                         }
-                    },
-                    select: function (result) {
-
                     }
                 }).on('select2:selecting', function (evt) {
                     self.addRecord(evt.params.args.data);
@@ -94,8 +91,7 @@ $(function () {
                     return r === record;
                 });
 
-                $('select', this.$el).select2('destroy');
-                this.initSelect2();
+                setTimeout(this.initSelect2, 100);
             },
             hasRecord: function (record) {
                 return _.where(this.records, {id: record.id}).length > 0;

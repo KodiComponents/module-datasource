@@ -12,7 +12,6 @@ use KodiCMS\Widgets\Contracts\Widget as WidgetInterface;
 
 abstract class Relation extends Field implements FieldTypeRelationInterface
 {
-
     /**
      * The relations to eager load on every query.
      *

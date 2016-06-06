@@ -67,7 +67,7 @@ class DatasourceList extends WidgetAbstract implements WidgetCacheable
      */
     public function prepareSettingsData()
     {
-        $fields = ! $this->getSection() ? [] : $this->section->getFields();
+        $fields = ! $this->getSection() ? [] : $this->section->getFields()->getFields();
 
         $ordering = (array) $this->ordering;
 

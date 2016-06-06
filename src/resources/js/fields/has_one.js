@@ -50,7 +50,7 @@ $(function () {
 								q: params.term, // search term
 								section_id: sectionId,
 								document_id: documentId,
-								exclude: _.pluck(self.records, 'id')
+								exclude: self.record.id || null
 							};
 						},
 						processResults: function (data, page) {
@@ -62,9 +62,6 @@ $(function () {
 								results: data.content
 							};
 						}
-					},
-					select: function (result) {
-
 					}
 				}).on('select2:selecting', function (evt) {
 					self.addRecord(evt.params.args.data);
@@ -90,8 +87,8 @@ $(function () {
 					title: null,
 					url: null
 				};
-
-				this.initSelect2();
+				
+				setTimeout(this.initSelect2, 100);
 			},
 			initRecord: function () {
 				if(DOCUMENT[this.relation]) {

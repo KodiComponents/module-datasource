@@ -20,7 +20,6 @@ $(function () {
 			this.section = this.field.section;
 			this.related_section = this.field.related_section;
 			this.document_id = DOCUMENT[this.section.documentPrimaryKey];
-
 			this.initRecord();
 
 			return {
@@ -49,7 +48,7 @@ $(function () {
 								q: params.term, // search term
 								section_id: sectionId,
 								document_id: documentId,
-								exclude: _.pluck(self.records, 'id')
+								exclude: self.record.id || null
 							};
 						},
 						processResults: function (data, page) {
@@ -61,9 +60,6 @@ $(function () {
 								results: data.content
 							};
 						}
-					},
-					select: function (result) {
-
 					}
 				}).on('select2:selecting', function (evt) {
 					self.addRecord(evt.params.args.data);
@@ -90,7 +86,7 @@ $(function () {
 					url: null
 				};
 
-				this.initSelect2();
+				setTimeout(this.initSelect2, 100);
 			},
 			initRecord: function () {
 				if(DOCUMENT[this.relation]) {

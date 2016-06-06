@@ -87,7 +87,7 @@ class BelongsTo extends Relation
             case static::ONE_TO_ONE:
                 $relatedField = $repository->create(array_merge([
                     'type' => 'belongs_to',
-                    'key'  => $this->getDBKey().'_belongs_to',
+                    'key'  => $this->getRelatedDBKey(),
                 ], $data));
 
                 break;
@@ -106,6 +106,14 @@ class BelongsTo extends Relation
     }
 
     /**
+     * @return string
+     */
+    public function getRelatedDBKey()
+    {
+        return $this->getDBKey().'_belongs_to';
+    }
+
+    /**
      * @param DocumentInterface     $document
      * @param SectionInterface|null $relatedSection
      * @param FieldInterface|null   $relatedField
@@ -117,7 +125,7 @@ class BelongsTo extends Relation
         return new BelongsToRelation(
             $relatedSection->getEmptyDocument()->newQuery(),
             $document,
-            $this->getRelatedField()->getDBKey().'_belongs_to',
+            $this->getRelatedField()->getRelatedDBKey(),
             $this->getSection()->getDocumentPrimaryKey(),
             $this->getRelationName()
         );
