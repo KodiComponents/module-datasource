@@ -1,23 +1,3 @@
-<script>
-$(function() {
-	function formatState(state) {
-		if (!state.id) return state.text; // optgroup
-		return $("<span><i class='fa fa-" + state.id + " fa-fw fa-lg'/> " + state.text+"</span>");
-	}
-	$("#icons").select2({
-		templateResult: formatState,
-		templateSelection: formatState
-	});
-
-	function chekShowInRootStatus() {
-		var $cont = $('#menu-position-cont');
-		$('#show_in_root_menu').is(':checked') ? $cont.show() : $cont.hide();
-	}
-	chekShowInRootStatus();
-	$('#show_in_root_menu').on('change', chekShowInRootStatus);
-});
-</script>
-
 <div class="panel-heading" data-icon="info">
 	<span class="panel-title">@lang('datasource::core.title.information')</span>
 </div>
@@ -64,7 +44,31 @@ $(function() {
 	<div class="form-group">
 		<label class="control-label col-md-3" for="icon">@lang('datasource::core.information.icon')</label>
 		<div class="col-md-9">
-			{!! Form::select('settings[icon]', array_unique(config('icons', [])), $section->getIcon(), ['class' => 'form-control', 'id' => 'icons']) !!}
+			{!! Form::select('settings[icon]', UI::icons(), $section->getIcon(), [
+				'class' => 'form-control no-script',
+				 'id' => 'icons'
+			 ]) !!}
 		</div>
 	</div>
 </div>
+
+@push('scripts')
+<script type="text/javascript">
+	$(function() {
+		function formatState(state) {
+			return $("<span><i class='fa fa-" + state.id + " fa-fw fa-lg'/> " + state.text+"</span>");
+		}
+		$("#icons").select2({
+			templateResult: formatState,
+			templateSelection: formatState
+		});
+
+		function chekShowInRootStatus() {
+			var $cont = $('#menu-position-cont');
+			$('#show_in_root_menu').is(':checked') ? $cont.show() : $cont.hide();
+		}
+		chekShowInRootStatus();
+		$('#show_in_root_menu').on('change', chekShowInRootStatus);
+	});
+</script>
+@endpush

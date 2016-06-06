@@ -112,13 +112,14 @@ class BelongsTo extends Relation
      *
      * @return BelongsToRelation
      */
-    public function getDocumentRelation(DocumentInterface $document, SectionInterface $relatedSection = null, FieldInterface $relatedField = null) {
-        $instance = $relatedSection->getEmptyDocument()->newQuery();
-
-        $foreignKey = $this->getSection()->getDocumentPrimaryKey();
-        $otherKey = str_replace('_belongs_to', '', $this->getDBKey());
-        $relation = $this->getRelationName();
-
-        return new BelongsToRelation($instance, $document, $otherKey, $foreignKey, $relation);
+    public function getDocumentRelation(DocumentInterface $document, SectionInterface $relatedSection = null, FieldInterface $relatedField = null)
+    {
+        return new BelongsToRelation(
+            $relatedSection->getEmptyDocument()->newQuery(),
+            $document,
+            $this->getRelatedField()->getDBKey().'_belongs_to',
+            $this->getSection()->getDocumentPrimaryKey(),
+            $this->getRelationName()
+        );
     }
 }

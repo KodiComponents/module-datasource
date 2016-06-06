@@ -3,6 +3,7 @@
 namespace KodiCMS\Datasource\Model;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\Relation;
 use Illuminate\Support\Collection;
 use Illuminate\Validation\Validator;
 use KodiCMS\CMS\Http\Controllers\System\TemplateController;
@@ -17,13 +18,10 @@ use KodiCMS\Datasource\Contracts\SectionInterface;
 use KodiCMS\Datasource\Fields\File;
 use KodiCMS\Datasource\Fields\Primitive\Primary;
 use KodiCMS\Datasource\Observers\DocumentObserver;
-use KodiCMS\Support\Traits\Tentacle;
 use KodiCMS\Widgets\Contracts\Widget as WidgetInterface;
 
 class Document extends Model implements DocumentInterface
 {
-    use Tentacle;
-
     protected static function boot()
     {
         parent::boot();
@@ -79,15 +77,20 @@ class Document extends Model implements DocumentInterface
     protected $appends = ['section'];
 
     /**
+     * @var array
+     */
+    protected $relationsFields = [];
+
+    /**
      * @param array                 $attributes
      * @param SectionInterface|null $section
      */
     public function __construct($attributes = [], SectionInterface $section = null)
     {
-        if (! is_null($section)) {
-            $this->section = $section;
-            $this->table = $this->section->getSectionTableName();
+        $this->section = $section;
 
+        if (! is_null($section)) {
+            $this->table = $this->section->getSectionTableName();
             $this->primaryKey = $section->getDocumentPrimaryKey();
 
             if (! is_null($this->primaryKey) && $this->hasField($this->primaryKey)) {
@@ -98,29 +101,14 @@ class Document extends Model implements DocumentInterface
             }
 
             foreach ($this->getFields() as $field) {
-                if ($field instanceof FieldTypeDateInterface) {
-                    $this->dates[] = $field->getDBKey();
-                    $this->casts[$field->getDBKey()] = 'date';
-                }
-
-                // TODO: подумать как это оптимизировать
-                if ($field instanceof FieldTypeRelationInterface) {
-                    $relatedSection = $field->getRelatedSection();
-                    $relatedField = $field->getRelatedField();
-
-                    $this->addRelation($field->getRelationName(), function () use ($field, $relatedSection, $relatedField) {
-                        return $field->getDocumentRelation($this, $relatedSection, $relatedField);
-                    });
-                }
-
                 if (! ($field instanceof FieldTypeOnlySystemInterface) and $field->hasDatabaseColumn()) {
                     $this->fillable[] = $field->getDBKey();
                     $this->setAttribute($field->getDBKey(), $field->getDefaultValue());
                 }
-            }
 
-            if ($this->hasField(static::CREATED_AT) and $this->hasField(static::UPDATED_AT)) {
-                $this->timestamps = true;
+                if ($field instanceof FieldTypeRelationInterface) {
+                    $this->relationsFields[] = $field->getRelationName();
+                }
             }
         }
 
@@ -267,7 +255,7 @@ class Document extends Model implements DocumentInterface
         $fields = $headline->getHeadlineFields();
 
         $attributes = [
-            0            => null,
+            0 => null,
             'primaryKey' => $this->getKey(),
         ];
 
@@ -377,7 +365,7 @@ class Document extends Model implements DocumentInterface
      */
     public function onControllerLoad(TemplateController $controller)
     {
-        $this->getFields()->each(function(FieldInterface $field) use($controller) {
+        $this->getFields()->each(function (FieldInterface $field) use ($controller) {
             $field->onControllerLoad($this, $controller);
         });
     }
@@ -418,7 +406,7 @@ class Document extends Model implements DocumentInterface
 
     /**
      * @param int|string      $id
-     * @param array|null          $fields
+     * @param array|null      $fields
      * @param string|int|null $primaryKeyField
      *
      * @return DocumentInterface|null
@@ -523,6 +511,22 @@ class Document extends Model implements DocumentInterface
         }
     }
 
+    /**
+     * @return mixed
+     */
+    public function withFields()
+    {
+        return $this->newQuery()->with($this->relationsFields);
+    }
+
+    public function loadRelations()
+    {
+        foreach ($this->relationsFields as $key)
+        {
+            $this->getRelationValue($key);
+        }
+    }
+
     /**************************************************************************
      * Override methods
      **************************************************************************/
@@ -556,10 +560,90 @@ class Document extends Model implements DocumentInterface
     }
 
     /**
+     * Get a relationship.
+     *
+     * @param  string $key
+     *
      * @return mixed
      */
-    public function withFields()
+    public function getRelationValue($key)
     {
-        return $this->newQuery()->with($this->getCustomRelations());
+        // If the key already exists in the relationships array, it just means the
+        // relationship has already been loaded, so we'll just return it out of
+        // here because there is no need to query within the relations twice.
+        if ($this->relationLoaded($key)) {
+            return $this->relations[$key];
+        }
+
+        // If the "attribute" exists as a method on the model, we will just assume
+        // it is a relationship and will load and return results from the query
+        // and hydrate the relationship's value on the "relationships" array.
+        if (method_exists($this, $key)) {
+            return $this->getRelationshipFromMethod($key);
+        }
+
+        if ($relation = $this->getFieldRelation($key)) {
+            $this->setRelation($key, $results = $relation->getResults());
+
+            return $results;
+        }
+    }
+
+    /**
+     * @param string $name
+     *
+     * @return Relation|null
+     */
+    protected function getFieldRelation($name)
+    {
+        $field = $this->getFields()->filter(function ($field) use ($name) {
+            return $field instanceof FieldTypeRelationInterface and $field->getRelationName() == $name;
+        })->first();
+
+        if (! $field) {
+            return null;
+        }
+
+        $relatedSection = $field->getRelatedSection();
+        $relatedField = $field->getRelatedField();
+
+        return $field->getDocumentRelation($this, $relatedSection, $relatedField);
+    }
+
+    /**
+     * Get the attributes that should be converted to dates.
+     *
+     * @return array
+     */
+    public function getDates()
+    {
+        $this->getFields()->each(function ($field) {
+            if ($field instanceof FieldTypeDateInterface) {
+                $this->dates[] = $field->getDBKey();
+            }
+        });
+
+        if ($this->hasField(static::CREATED_AT) and $this->hasField(static::UPDATED_AT)) {
+            $this->timestamps = true;
+        }
+
+        return parent::getDates();
+    }
+
+    /**
+     * Handle dynamic method calls into the model.
+     *
+     * @param  string $method
+     * @param  array  $parameters
+     *
+     * @return mixed
+     */
+    public function __call($method, $parameters)
+    {
+        if (in_array($method, $this->relationsFields) and $relation = $this->getFieldRelation($method)) {
+            return $relation;
+        }
+
+        return parent::__call($method, $parameters);
     }
 }

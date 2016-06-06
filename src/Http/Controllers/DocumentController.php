@@ -79,6 +79,7 @@ class DocumentController extends BackendController
         WYSIWYG::loadAllEditors();
 
         $document = $repository->getEmptyDocument($sectionId)->withFields()->findOrFail($documentId);
+
         $section = $document->getSection();
 
         $document->onControllerLoad($this);

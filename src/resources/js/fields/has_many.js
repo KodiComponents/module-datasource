@@ -72,17 +72,12 @@ $(function () {
                 }).on('select2:selecting', function (evt) {
                     self.addRecord(evt.params.args.data);
                     $(this).select2("close");
-                    $(this).select2().options;
-
                     return false;
                 });
             },
             addRecord: function (record, db) {
                 var pk = this.related_section.documentPrimaryKey,
                     title = this.related_section.documentTitleKey;
-
-                if (_.isUndefined(db))
-                    db = true;
 
                 var data = {
                     id: record[pk],
@@ -92,15 +87,6 @@ $(function () {
 
                 if (!this.hasRecord(data)) {
                     this.records.push(data);
-
-                    if (db && !this.isNewDocument()) {
-                        Api.post('/api.datasource.document.related', {
-                            document_id: this.document_id,
-                            section_id: this.section.id,
-                            field_id: this.field.id,
-                            related_document_id: record[pk]
-                        });
-                    }
                 }
             },
             removeRecord: function (record) {
@@ -108,17 +94,7 @@ $(function () {
                     return r === record;
                 });
 
-                if (!this.isNewDocument()) {
-                    Api.delete('/api.datasource.document.related', {
-                        document_id: this.document_id,
-                        section_id: this.section.id,
-                        field_id: this.field.id,
-                        related_document_id: record[pk]
-                    });
-                }
-
                 $('select', this.$el).select2('destroy');
-
                 this.initSelect2();
             },
             hasRecord: function (record) {

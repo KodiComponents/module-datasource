@@ -110,9 +110,9 @@ abstract class Relation extends Field implements FieldTypeRelationInterface
     {
         $section = $this->getRelatedSection();
         return $this->getDocumentRelation($document, $section)
-                    ->pluck(
-                        $section->getDocumentTitleKey(), $section->getDocumentPrimaryKey()
-                    );
+            ->pluck(
+                $section->getDocumentTitleKey(), $section->getDocumentPrimaryKey()
+            );
     }
 
     /**

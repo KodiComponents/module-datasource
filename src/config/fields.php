@@ -91,6 +91,7 @@ return [
     'has_one'      => [
         'class'         => KodiCMS\Datasource\Fields\Relation\HasOne::class,
         'title'         => trans('datasource::fields.has_one.title'),
+        'edit_template' => 'datasource::field.types.has_one',
         'category'      => 'Relations',
     ],
     'has_many'     => [

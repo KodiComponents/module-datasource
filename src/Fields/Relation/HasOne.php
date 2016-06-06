@@ -7,17 +7,21 @@ use Illuminate\Database\Eloquent\Relations\HasOne as HasOneRelation;
 use Illuminate\Database\Schema\Blueprint;
 use KodiCMS\Datasource\Contracts\DocumentInterface;
 use KodiCMS\Datasource\Contracts\FieldInterface;
-use KodiCMS\Datasource\Contracts\FieldTypeOnlySystemInterface;
 use KodiCMS\Datasource\Contracts\SectionInterface;
 use KodiCMS\Datasource\Fields\Relation;
 use KodiCMS\Datasource\Repository\FieldRepository;
 
-class HasOne extends Relation implements FieldTypeOnlySystemInterface
+class HasOne extends Relation
 {
     /**
      * @var bool
      */
     protected $hasDatabaseColumn = false;
+
+    /**
+     * @var string
+     */
+    protected $selectedDocument;
 
     /**
      * @param DocumentInterface $document
@@ -28,13 +32,12 @@ class HasOne extends Relation implements FieldTypeOnlySystemInterface
      */
     public function getDocumentRelation(DocumentInterface $document, SectionInterface $relatedSection = null, FieldInterface $relatedField = null)
     {
-        $instance = $relatedSection->getEmptyDocument()->newQuery();
-
-        $foreignKey = $relatedSection->getSectionTableName().'.'.$relatedSection->getDocumentPrimaryKey();
-        $otherKey   = $this->getDBKey();
-        $relation   = $this->getRelationName();
-
-        return new HasOneRelation($instance, $relatedSection->getEmptyDocument(), $foreignKey, $otherKey, $relation);
+        return new HasOneRelation(
+            $relatedSection->getEmptyDocument()->newQuery(),
+            $document,
+            $relatedSection->getSectionTableName().'.'.$this->getRelatedField()->getDBKey(),
+            $this->getSection()->getDocumentPrimaryKey()
+        );
     }
     
     /**************************************************************************
@@ -70,10 +73,8 @@ class HasOne extends Relation implements FieldTypeOnlySystemInterface
         $section = $this->relatedSection()->first();
 
         return \DB::table($section->getSectionTableName())
-                  ->addSelect($section->getDocumentPrimaryKey())
-                  ->addSelect($section->getDocumentTitleKey())
-                  ->where($section->getDocumentPrimaryKey(), $document->getAttribute($this->getDBKey()))
-                  ->pluck($section->getDocumentTitleKey(), $section->getDocumentPrimaryKey());
+            ->where($section->getDocumentPrimaryKey(), $document->getAttribute($this->getDBKey()))
+            ->pluck($section->getDocumentTitleKey(), $section->getDocumentPrimaryKey());
     }
 
     /**************************************************************************
@@ -86,11 +87,66 @@ class HasOne extends Relation implements FieldTypeOnlySystemInterface
      *
      * @return mixed
      */
+    public function onSetDocumentAttribute(DocumentInterface $document, $value)
+    {
+        $this->selectedDocument = $value;
+    }
+
+    /**
+     * @param DocumentInterface $document
+     */
+    public function onUpdateDocumentRelations(DocumentInterface $document)
+    {
+        if ($relatedDocument = $this->getRelatedSection()->newDocumentQuery()->find($this->selectedDocument)) {
+            $relation = $document->{$this->getRelationName()}();
+            $relation->save($relatedDocument);
+        }
+    }
+
+    /**
+     * @param DocumentInterface $document
+     * @param mixed $value
+     *
+     * @return mixed
+     */
     public function onGetHeadlineValue(DocumentInterface $document, $value)
     {
         return ! is_null($relatedDocument = $document->getAttribute($this->getRelationName()))
             ? \HTML::link($relatedDocument->getEditLink(), $relatedDocument->getTitle(), ['class' => 'popup'])
             : null;
+    }
+
+    /**
+     * @param FieldRepository $repository
+     *
+     * @throws \KodiCMS\Datasource\Exceptions\FieldException
+     */
+    public function onCreated(FieldRepository $repository)
+    {
+        if (! is_null($this->getRelatedFieldId())) {
+            return;
+        }
+
+        $data = [
+            'section_id'         => $this->getRelatedSectionId(),
+            'is_system'          => 1,
+            'name'               => $this->getSection()->getName(),
+            'related_section_id' => $this->getSection()->getId(),
+            'related_field_id'   => $this->getId(),
+        ];
+
+        if ($this->getRelatedSectionId() == $this->section_id) {
+            $data['settings']['is_editable'] = false;
+        }
+
+        $relatedField = $repository->create(array_merge([
+            'type' => 'belongs_to',
+            'key'  => $this->getDBKey().'_belongs_to',
+        ], $data));
+
+        if (! is_null($relatedField)) {
+            $this->update(['related_field_id' => $relatedField->getId()]);
+        }
     }
 
     /**

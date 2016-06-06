@@ -115,6 +115,13 @@ class Field extends DatasourceModel implements FieldInterface
     ];
 
     /**
+     * The relations to eager load on every query.
+     *
+     * @var array
+     */
+    protected $with = ['section'];
+
+    /**
      * @var string
      */
     protected $filterTypeClass;
@@ -123,14 +130,6 @@ class Field extends DatasourceModel implements FieldInterface
      * @var FilterTypeInterface
      */
     protected $filterType;
-
-    /**
-     * @param array $attributes
-     */
-    public function __construct(array $attributes = [])
-    {
-        parent::__construct($attributes);
-    }
 
     /**
      * @return FilterTypeInterface
@@ -711,7 +710,7 @@ class Field extends DatasourceModel implements FieldInterface
      */
     public function relatedField()
     {
-        return $this->belongsTo(\KodiCMS\Datasource\Model\Field::class, 'related_field_id');
+        return $this->belongsTo(Field::class, 'related_field_id', 'id');
     }
 
     /**************************************************************************

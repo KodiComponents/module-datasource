@@ -34,7 +34,7 @@ class DatasourceController extends BackendController
         if (is_null($sectionId)) {
             $section = $repository->query()->first();
         } else {
-            $section = $repository->findOrFail($sectionId);
+            $section = $repository->query()->findOrFail($sectionId);
         }
 
         if (! is_null($section)) {
