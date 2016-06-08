@@ -63,4 +63,17 @@ class Section extends \KodiCMS\CMS\Navigation\Page
         $this->setIcon($this->section->getIcon());
         return parent::getIcon();
     }
+
+    /**
+     * @return array
+     */
+    public function getAliases()
+    {
+        return [
+            route('backend.datasource.edit', [$this->section->getId()]),
+            route('backend.datasource.field.create', [$this->section->getId()]),
+            route('backend.datasource.document.create', [$this->section->getId()]),
+            route('backend.datasource.document.edit', [$this->section->getId(), '*'])
+        ];
+    }
 }
