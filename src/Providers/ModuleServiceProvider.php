@@ -14,10 +14,16 @@ use KodiCMS\Datasource\Navigation\Folder;
 use KodiCMS\Datasource\Navigation\Section;
 use KodiCMS\Datasource\Navigation\SectionType;
 use KodiCMS\Support\ServiceProvider;
+use KodiCMS\Widgets\WidgetType;
 use Yajra\Datatables\Datatables;
 
 class ModuleServiceProvider extends ServiceProvider
 {
+    public function boot()
+    {
+        $this->registerWidgets();
+    }
+
     public function register()
     {
         $this->registerAliases([
@@ -103,5 +109,12 @@ class ModuleServiceProvider extends ServiceProvider
                 $create->addPage(new SectionType($object));
             }
         }
+    }
+
+    private function registerWidgets()
+    {
+        $this->app['widget.manager']
+            ->registerWidget(new WidgetType('datasource.list', 'datasource::widgets.list.title', 'KodiCMS\Datasource\Widget\DatasourceList', 'Datasource'))
+            ->registerWidget(new WidgetType('datasource.document', 'datasource::widgets.document.title', 'KodiCMS\Datasource\Widget\DatasourceDocument', 'Datasource'));
     }
 }
