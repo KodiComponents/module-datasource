@@ -181,7 +181,7 @@ class Image extends File
     {
         return array_map(function ($field) {
             return $field->getName();
-        }, array_filter($this->getSection()->getFields()->getFields(), function ($field) {
+        }, array_filter($this->getSection()->getFields()->getFields()->toArray(), function ($field) {
             return ($field instanceof Image) and $field->getId() != $this->getId();
         }));
     }
