@@ -181,7 +181,7 @@ class Image extends File
     {
         return array_map(function ($field) {
             return $field->getName();
-        }, array_filter($this->getSection()->getFields()->getFields(), function ($field) {
+        }, array_filter($this->getSection()->getFields()->getFields()->toArray(), function ($field) {
             return ($field instanceof Image) and $field->getId() != $this->getId();
         }));
     }
@@ -220,6 +220,8 @@ class Image extends File
      */
     public function onDocumentFill(DocumentInterface $document, $value)
     {
+        $value = is_null($value) ? $document->getOriginal($this->key) : $value;
+        
         parent::onDocumentFill($document, $value);
 
         if (($value instanceof UploadedFile) and ! empty($this->getSelectedSameImageFields())) {
