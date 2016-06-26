@@ -47,6 +47,8 @@ return [
     'boolean'      => [
         'title' => 'Boolean',
         'style' => 'Стиль',
+        'true'  => 'Истина',
+        'false' => 'Ложь',
     ],
     'timestamp'    => [
         'title' => 'Timestamp',
