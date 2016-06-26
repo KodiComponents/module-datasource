@@ -120,7 +120,9 @@ class Integer extends Primitive
      */
     public function onSetDocumentAttribute(DocumentInterface $document, $value)
     {
-        return (int) $value;
+        $value = (int) (is_null($value) ? $this->getSetting('default_value') : $value);
+        
+        return $document->setAttribute($this->getDBKey(), $value);
     }
 
     /**************************************************************************
