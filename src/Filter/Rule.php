@@ -233,5 +233,7 @@ class Rule implements FilterRuleInterface
                 return $behavior->getRouter()->getParameter($path);
             }
         }
+
+        return $param;
 	}
 }

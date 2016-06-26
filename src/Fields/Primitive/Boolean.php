@@ -93,4 +93,12 @@ class Boolean extends Primitive
             static::STYLE_SELECT   => 'Dropdown',
         ];
     }
+
+    public function getOptionsList() 
+    {
+        return [
+            1 => trans('datasource::fields.boolean.true'),
+            0 => trans('datasource::fields.boolean.false'),
+        ];
+    }
 }
