@@ -181,7 +181,6 @@ class Rule implements FilterRuleInterface
 			$value = $this->getField()->prepareValue($value);
 		}
 
-		dd($value);
 		return $value;
 	}
 
