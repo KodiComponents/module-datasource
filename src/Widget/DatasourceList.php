@@ -59,6 +59,7 @@ class DatasourceList extends WidgetAbstract implements WidgetCacheable
         return [
             'order_by_rand' => false,
             'document_uri'  => '/document/:id',
+            'count'         => 15,
         ];
     }
 
@@ -153,8 +154,7 @@ class DatasourceList extends WidgetAbstract implements WidgetCacheable
             $documents->orderByRaw('RAND()');
         }
 
-        // TODO добавить кол-во выводимых документов
-        return $this->documents = $documents->paginate();
+        return $this->documents = $documents->paginate($this->count);
     }
 
     /**

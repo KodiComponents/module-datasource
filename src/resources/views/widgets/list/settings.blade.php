@@ -31,6 +31,15 @@
 			]) !!}
 		</div>
 	</div>
+
+	<div class="form-group">
+		<label class="control-label col-md-3" for="doc_uri">@lang('datasource::widgets.list.settings.count')</label>
+		<div class="col-md-9">
+			{!! Form::text('settings[count]', $widget->count, [
+				'class' => 'form-control', 'id' => 'count'
+			]) !!}
+		</div>
+	</div>
 </div>
 
 @include('datasource::widgets.partials.fields', compact('fields', 'widget'))
