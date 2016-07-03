@@ -74,14 +74,6 @@ class DatasourceDocument extends WidgetAbstract implements WidgetCacheable
     }
 
     /**
-     * @return \Illuminate\Support\Collection|\KodiCMS\Datasource\Contracts\FieldInterface[]
-     */
-    public function getFields()
-    {
-        return $this->getSection()->getFields()->getFields();
-    }
-
-    /**
      * @param mixed $id
      */
     public function setDocumentId($id)

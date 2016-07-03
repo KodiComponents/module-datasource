@@ -19,4 +19,12 @@ trait WidgetDatasourceFields
     {
         $this->settings['selected_fields'] = (array) $fields;
     }
+
+    /**
+     * @return \Illuminate\Support\Collection|\KodiCMS\Datasource\Contracts\FieldInterface[]
+     */
+    public function getFields()
+    {
+        return $this->getSection()->getFields()->getFields();
+    }
 }

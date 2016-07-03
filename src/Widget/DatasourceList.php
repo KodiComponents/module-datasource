@@ -68,7 +68,7 @@ class DatasourceList extends WidgetAbstract implements WidgetCacheable
      */
     public function prepareSettingsData()
     {
-        $fields = ! $this->getSection() ? [] : $this->section->getFields()->getFields();
+        $fields = ! $this->getSection() ? [] : $this->getFields();
 
         $ordering = (array) $this->ordering;
 
@@ -96,7 +96,7 @@ class DatasourceList extends WidgetAbstract implements WidgetCacheable
 
         $visibleFields = [];
 
-        foreach ($this->getSection()->getFields() as $field) {
+        foreach ($this->getFields() as $field) {
             if (in_array($field->getDBKey(), $this->getSelectedFields())) {
                 $visibleFields[] = $field;
             }
@@ -119,7 +119,7 @@ class DatasourceList extends WidgetAbstract implements WidgetCacheable
         return [
             'section'      => $this->getSection(),
             'documentsRaw' => $result->items(),
-            'pagination'   => $result,
+            '$doc'   => $result,
             'documents'    => new Collection($documents),
         ];
     }
