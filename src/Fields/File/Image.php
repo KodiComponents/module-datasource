@@ -227,7 +227,7 @@ class Image extends File
         if (($value instanceof UploadedFile) and ! empty($this->getSelectedSameImageFields())) {
             $fields = $this->getSection()->getFields();
             foreach ($this->getSelectedSameImageFields() as $sameField) {
-                if (! is_null($field = $fields->offsetGet($sameField)) and ! ($document->{$sameField} instanceof UploadedFile)) {
+                if ($fields->offsetExists($sameField) and ! is_null($field = $fields->offsetGet($sameField)) and ! ($document->{$sameField} instanceof UploadedFile)) {
                     if ($filePath = $field->copyImageFile($document->{$this->getDBKey()})) {
                         $document->{$sameField} = $filePath;
                     }
