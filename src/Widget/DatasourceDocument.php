@@ -74,6 +74,14 @@ class DatasourceDocument extends WidgetAbstract implements WidgetCacheable
     }
 
     /**
+     * @return \Illuminate\Support\Collection|\KodiCMS\Datasource\Contracts\FieldInterface[]
+     */
+    public function getFields()
+    {
+        return $this->getSection()->getFields()->getFields();
+    }
+
+    /**
      * @param mixed $id
      */
     public function setDocumentId($id)
@@ -97,7 +105,7 @@ class DatasourceDocument extends WidgetAbstract implements WidgetCacheable
      */
     public function getIdFields()
     {
-        $fieldObjects = ! $this->getSection() ? [] : $this->section->getFields();
+        $fieldObjects = ! $this->getSection() ? [] : $this->getFields();
         $fields = [];
         foreach ($fieldObjects as $field) {
             if ($field->canBeUsedAsDocumentID()) {
@@ -113,7 +121,7 @@ class DatasourceDocument extends WidgetAbstract implements WidgetCacheable
      */
     public function getMetaFields()
     {
-        $fieldObjects = ! $this->getSection() ? [] : $this->section->getFields();
+        $fieldObjects = ! $this->getSection() ? [] : $this->getFields();
         $fields = [];
         foreach ($fieldObjects as $field) {
             if (($field instanceof Text) or ($field instanceof Textarea)) {
@@ -129,7 +137,7 @@ class DatasourceDocument extends WidgetAbstract implements WidgetCacheable
      */
     public function prepareSettingsData()
     {
-        $fields = ! $this->getSection() ? [] : $this->section->getFields();
+        $fields = ! $this->getSection() ? [] : $this->getFields();
 
         return compact('fields');
     }
@@ -167,7 +175,7 @@ class DatasourceDocument extends WidgetAbstract implements WidgetCacheable
     {
         $visibleFields = [];
 
-        foreach ($this->getSection()->getFields() as $field) {
+        foreach ($this->getFields() as $field) {
             if (in_array($field->getDBKey(), $this->getSelectedFields())) {
                 $visibleFields[] = $field;
             }
